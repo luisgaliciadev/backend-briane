@@ -1,0 +1,38 @@
+{
+  "name": "backend-servakr",
+  "version": "1.0.0",
+  "description": "servidor servalApp\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[D\u001b[Dbackend\u001b[3~\u001b[ servalApp",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ing. Luis Galicia",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parse": "^0.1.0",
+    "body-parser": "^1.19.0",
+    "cheerio": "^1.0.0-rc.3",
+    "cors": "^2.8.5",
+    "ejs": "^3.0.1",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.6",
+    "google-auth-library": "^5.7.0",
+    "html-pdf": "^2.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "jwt-simple": "^0.5.6",
+    "moment": "^2.24.0",
+    "mongoose": "^5.8.1",
+    "mongoose-pagination": "^1.0.0",
+    "mongoose-unique-validator": "^2.0.3",
+    "mssql": "^6.0.1",
+    "node-excel-export": "^1.4.4",
+    "request": "^2.88.0",
+    "serve-index": "^1.9.1",
+    "tedious": "^6.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
