@@ -23,6 +23,7 @@ app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
     res.header("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS ");
     res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Content-Type', 'text/plain');
     next();
 });
 
@@ -39,6 +40,8 @@ var excelRoutes = require('./routes/excel');
 var pdfRoutes = require('./routes/pdf');
 var searchRoutes = require('./routes/search');
 var registerRoutes = require('./routes/register');
+var conductorRoutes = require('./routes/conductor');
+var mygeotabRoutes = require('./routes/mygeotab');
 
 // Connetion BD MSSQL SERVER
 app.set('view engine', 'ejs');
@@ -48,7 +51,7 @@ var config = {
     user: 'sa',
     // driver='tedious',
     password: 'Cybersac1',
-    server: '192.168.3.3',
+    server: '190.117.103.41',
     //port:
     database: 'BRIANE_APP'
 };
@@ -78,5 +81,7 @@ app.use('/api/excel', excelRoutes);
 app.use('/api/pdf', pdfRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/register', registerRoutes);
+app.use('/api/conductor', conductorRoutes);
+app.use('/api/mygeotab', mygeotabRoutes);
 
 app.use('/api', appRoutes);

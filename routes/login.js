@@ -240,4 +240,47 @@ app.post('/', (req, res) => {
     });
 });
 
+// Login normal conductor
+app.post('/conductor', (req, res) => {
+    var body = req.body;
+    // console.log(body);
+    var dni = body.DNI;
+    var password = body.PASSWORD;
+    var params = `'${dni}', '${password}'`;
+    var request = new mssql.Request();
+    var lsql = `EXEC LOGIN_CONDUCTOR ${params}`;
+    request.query(lsql, (err, result) => {
+        if (err) {
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var userLogin = result.recordset;
+            var ID_USER = userLogin[0].ID_USUARIO;
+
+            if (ID_USER === 0) {
+                return res.status(400).send({
+                    ok: true,
+                    message: userLogin[0].MESSAGE
+                });
+            } else {               
+                // Create token
+                var token = jwt.sign({ user: userLogin }, SEED, { expiresIn: 14400 }); // expira en 4 horas
+
+                return res.status(200).send({
+                    ok: true,
+                    message: userLogin[0].MESSAGE,
+                    conductor: {
+                        id: userLogin[0].ID_USUARIO,
+                        dni: userLogin[0].DNI
+                    },                    
+                    token: token
+                });      
+            }
+        }
+    });
+});
+
 module.exports = app;
