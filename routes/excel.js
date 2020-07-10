@@ -261,7 +261,7 @@ app.get('/clients/:id/:search', (req, res, next ) => {
   var id = req.params.id;
   var search = req.params.search;
   var params = `${id}, '${search}'`;
-  console.log(params);
+  // console.log(params);
   var lsql = `EXEC GET_CLIENTS ${params}`;
   var request = new mssql.Request();
   request.query(lsql, (err, result) => {
@@ -371,5 +371,120 @@ app.get('/clients/:id/:search', (req, res, next ) => {
 
 // Clients
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Denuncias
+
+// Get Denuncias
+app.get('/denuncias/:search', (req, res, next ) => {    
+  var search = req.params.search;
+  var params = `'${search}'`;
+ 
+  var lsql = `EXEC GET_DENUNCIAS ${params}`;
+  // console.log(lsql);
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+      if (err) { 
+          return res.status(500).send({
+              ok: false,
+              message: 'Error en la petición.',
+              error: err
+          });
+      } else {            
+          var denuncias = result.recordset;       
+          console.log(denuncias);
+          // You can define styles as json object
+  const styles = {
+      header: {
+        fill: {
+          fgColor: {
+            rgb: '3393FF'
+          }
+        },
+        font: {
+          color: {
+            rgb: 'FFFFFFFF'
+          },
+          sz: 12,
+          bold: true,
+          // underline: true,
+          margin: 'center'
+          // numberFormat: '$#,##0.00; ($#,##0.00); -',
+        }
+      },
+      cellPink: {
+        fill: {
+          fgColor: {
+            rgb: 'FFFFCCFF'
+          }
+        }
+      },
+      cellGreen: {
+        fill: {
+          fgColor: {
+            rgb: 'FF00FF00'
+          }
+        }
+      }
+    };
+    //Array of objects representing heading rows (very top)
+    const heading = [
+       [''],
+       [{value: 'LISTADO DE DENUNCIAS', style: styles.header}],
+       [''] // <-- It can be only values
+    ];       
+    //Here you specify the export structure
+    const specification = {
+      ID_DENUNCIA: { // <- the key should match the actual data key
+        displayName: 'ID', // <- Here you specify the column header
+        headerStyle: styles.header, // <- Header style     
+        width: 100 // <- width in pixels
+      },
+      TITULO: {
+        displayName: 'TITULO',
+        headerStyle: styles.header,
+        width: 300 // <- width in chars (when the number is passed as string)
+      },
+      FH_REGISTRO: {
+        displayName: 'FECHA',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 150 // <- width in pixels
+      },
+      DESCRIPCION: {
+        displayName: 'INFORMACIÓN',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+    }
+    const dataset = denuncias;
+    console.log(denuncias)
+    const merges = [
+      { start: { row: 2, column: 1 }, end: { row: 2, column:  4} }
+     
+    ]
+   
+    const report = excel.buildExport(
+      [ 
+        {
+          name: 'Report', // <- Specify sheet name (optional)
+          heading: heading, // <- Raw heading array (optional)
+          merges: merges, // <- Merge cell ranges
+          specification: specification, // <- Report specification
+          data: dataset // <-- Report data
+        }
+      ]
+    ); 
+    res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+    return res.status(200).send(report);
+      }
+  });
+});
+// End Get Denuncias
+
+// Denuncias
+///////////////////////////////////////////////////////////////////////////////////////////////
+
 
 module.exports = app;

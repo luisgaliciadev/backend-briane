@@ -1,0 +1,270 @@
+ODOMETRO POR FECHA Y ID VEHICULO
+api.call("Get", {
+    typeName : "StatusData",
+    search : {
+                    fromDate : "2020-05-30",
+                    toDate : "2020-06-07 23:59",
+                    // toDate : new Date(),
+                   
+                    diagnosticSearch : {
+                        id : "DiagnosticOdometerAdjustmentId"
+                    },
+                    deviceSearch : {
+                        id : "b42"
+                    }
+                }
+}, function(result) {
+    var odometerData = result;
+    console.log('odometerData:', odometerData);
+    var distance1 = odometerData[odometerData.length - 1].data - odometerData[0].data;
+    var distance2 = odometerData[odometerData.length - 1].data;
+    console.log("distance1: ", distance1);
+    console.log("distance2: ", distance2);
+
+}, function(e) {
+    console.error("Failed:", e);
+});
+
+******************************************************************
+COMBUSTIBLE CONSUMIDO POR DIA Y ID VEHICULO
+api.call("Get", {
+    typeName : "StatusData",
+    search : {
+                    fromDate : "2020-05-01",
+                    toDate : "2020-05-30",
+                    diagnosticSearch : {
+                        id : "DiagnosticDeviceTotalFuelId"
+                    },
+                    deviceSearch : {
+                        id : "b42"
+                    }
+                }
+}, function(result) {
+    var fuelUsedData = result;
+    var fuelUsed1 = fuelUsedData[fuelUsedData.length - 1].data;
+    console.log('fuelUsedData:', fuelUsedData);
+    console.log('fuelUsed1: ', fuelUsed1);
+    var fuelUsed2 = fuelUsedData[fuelUsedData.length - 1].data - fuelUsedData[0].data;
+    console.log('fuelUsed2:', fuelUsed2);
+}, function(e) {
+    console.error("Failed:", e);
+});
+*************************************
+GET CONSUMO DE COMBUSTIBLE
+var group = {
+        id: "GroupCompanyId" // Populated with the desired group id.
+    },
+    results = [];
+
+api.call("Get", {
+    typeName : "Device",
+    search : {
+        "groups" : [group]
+    },
+    resultsLimit: 150
+}, function (devices) {
+    var now = new Date().toISOString(),
+        calls = [],
+        diagnostic = {
+            id: "DiagnosticDeviceTotalFuelId"
+        };
+
+    devices.forEach(function (device) {
+        results.push({
+            name : device.name,
+            vehicleIdentificationNumber : device.vehicleIdentificationNumber
+        });
+        calls.push({
+            method : "Get",
+            params : {
+                typeName : "StatusData",
+                search : {
+                    fromDate : now,
+                    toDate : now,
+                    diagnosticSearch : diagnostic,
+                    deviceSearch : device
+                }
+            }
+        });
+    });
+    api.call("ExecuteMultiCall", {
+        calls : calls
+    }, function (callResults) {
+        var statusData, i;
+        for (i = 0; i < callResults.length; i++) {
+            statusData = callResults[i][0];
+            if (statusData) {
+                results[i].fuelConsume = statusData.data;
+            }
+        }
+        console.log(results);
+    });
+});
+/*opt nomin*/
+************************************
+OTRAS API
+api.call("Get", {
+    "typeName": "Device",
+    "resultsLimit": 10
+} // Fin get
+, function(divices) {
+    var now = new Date().toISOString(),
+    results = [],
+    calls = [],
+    diagnostic = {
+        id: "DiagnosticOdometerAdjustmentId"
+    };
+    
+     divices.forEach(function (divice) {
+        // console.log(divice);
+        
+        results.push({
+                        id : divice.id,
+                        licensePlate: divice.licensePlate
+                        
+                    });
+        
+        calls.push({
+                    method : "Get",
+                    params : {
+                        typeName : "StatusData",
+                        search : {
+                            fromDate : "2020-06-01",
+                            toDate : '2020-06-08 23:59',
+                            diagnosticSearch : diagnostic,
+                            deviceSearch : divice
+                        }
+                    }
+        });
+     }); // fin for each
+     
+     api.call("ExecuteMultiCall", {
+                calls : calls
+    },
+    
+    function (callResults) {
+        
+        // console.log('callResults:', callResults);
+        
+        var statusData, i;
+        for (i = 0; i < callResults.length; i++) {
+            statusData = callResults[i];
+            if (statusData.length > 0) {
+               
+                console.log('statusData:', statusData);
+                var odometerTotal = statusData[statusData.length - 1].data;
+                var odometer = statusData[statusData.length - 1].data - statusData[0].data;
+                //console.log( statusData[statusData.length - 1]);
+                var dateTimeLats = statusData[statusData.length - 1].dateTime
+                results[i].odometerTotal = odometerTotal;
+                results[i].odometer = odometer;
+                results[i].dateTimeLats = dateTimeLats;
+            }
+        }
+        console.log('results:', results);
+    }
+    
+    );
+    
+   
+} // Fin divices
+, function(e) {
+    console.error("Failed:", e);
+} // Fin error principal
+
+); // Fin llamada
+***********************************
+OTRAS API
+api.call("Get", {
+    "typeName": "Device",
+    "resultsLimit": 10
+} // Fin get
+, function(divices) {
+    var now = new Date().toISOString(),
+    results = [],
+    calls = [],
+    diagnostic = {
+        id: "DiagnosticDeviceTotalFuelId"
+    };
+    
+     divices.forEach(function (divice) {
+        // console.log(divice);
+        
+        results.push({
+                        id : divice.id,
+                        licensePlate: divice.licensePlate
+                        
+                    });
+        
+        calls.push({
+                    method : "Get",
+                    params : {
+                        typeName : "StatusData",
+                        search : {
+                            fromDate : "2020-06-01",
+                            toDate : now,
+                            diagnosticSearch : diagnostic,
+                            deviceSearch : divice
+                        }
+                    }
+        });
+     }); // fin for each
+     
+     api.call("ExecuteMultiCall", {
+                calls : calls
+    },
+    
+    function (callResults) {
+        
+        // console.log('callResults:', callResults);
+        
+        var statusData, i;
+        for (i = 0; i < callResults.length; i++) {
+            statusData = callResults[i];
+            if (statusData.length > 0) {
+               
+                //console.log('statusData:', statusData);
+                var fuelUsedTotal = statusData[statusData.length - 1].data;
+                var fuelUsed = statusData[statusData.length - 1].data - statusData[0].data;
+                //console.log( statusData[statusData.length - 1]);
+                var dateTimeLats = statusData[statusData.length - 1].dateTime
+                results[i].fuelUsedTotal = fuelUsedTotal;
+                results[i].fuelUsed = fuelUsed;
+                results[i].dateTimeLats = dateTimeLats;
+            }
+        }
+        console.log('results:', results);
+    }
+    
+    );
+    
+   
+} // Fin divices
+, function(e) {
+    console.error("Failed:", e);
+} // Fin error principal
+
+); // Fin llamada
+*****************************************
+
+api.call("Get", {
+    typeName : "ExceptionEvent",
+    search : {
+                    fromDate : "2020-05-30",
+                    toDate : "2020-06-07 23:59",
+                    // toDate : new Date(),
+                   
+                    diagnosticSearch : {
+                        id : "akSaXYOKZ806p5nc7Po-OhQ"
+                    },
+                    deviceSearch : {
+                        id : "b42"
+                    }
+                }
+}, function(result) {
+   console.log(result)
+
+}, function(e) {
+    console.error("Failed:", e);
+});
+

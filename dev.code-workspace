@@ -17,6 +17,15 @@
 		},
 		{
 			"path": "..\\notiApp"
+		},
+		{
+			"path": "..\\dashboard-control-room-sentinel"
+		},
+		{
+			"path": "..\\webApp"
+		},
+		{
+			"path": "..\\backend-webApp"
 		}
 	]
 }

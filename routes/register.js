@@ -172,7 +172,6 @@ app.get('/client/:id/:idUser', (req, res, next ) => {
     var id = req.params.id;
     var idUser = req.params.idUser;
     var params = `${id}, ${idUser}`; 
-    console.log(params);
     var lsql = `EXEC GET_CLIENT ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -251,7 +250,6 @@ app.post('/address', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var idDistrito = body.ID_DISTRITO;
     var fgPrincipal = body.FG_PRINCIPAL;
     var params = `${idClient},'${dsAddress}' , '${address}', ${idDistrito}, ${fgPrincipal}`;
-    console.log(idDistrito);
     var request = new mssql.Request();
     var lsql = `EXEC REGISTER_ADDRESS_CLIENT ${params}`;
     var request = new mssql.Request();
@@ -438,5 +436,145 @@ app.delete('/address/:id',mdAuthenticattion.verificarToken, (req, res, next ) =>
 
 // Clints
 //////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
+// Denuncias
+
+// Register Denuncia
+app.post('/denuncia', (req, res, next ) => {
+    var body = req.body; 
+    var TITULO = body.titulo.toUpperCase();
+    var DESCRIPCION = body.descripcion;
+    var FG_EMPLEADO = body.FG_EMPLEADO;
+    var FG_ANONIMATO = body.FG_ANONIMATO;
+    var NOMBRES = body.nombres;
+    var APELLIDOS = body.apellidos;
+    var TELEFONO = body.telefono;
+    var CORREO = body.correo;
+    var HORA_CONTACTO = body.horaContacto;
+    var PERSONAS_INVOLUCRADAS = body.personasInvolucradas;
+    var ARCHIVO1 = body.archivo1;
+    var ARCHIVO2 = body.archivo2;
+    var ARCHIVO3 = body.archivo3;
+
+    
+    var params = `'${TITULO}', '${DESCRIPCION}', ${FG_EMPLEADO}, ${FG_ANONIMATO}, '${NOMBRES}', '${APELLIDOS}', '${TELEFONO}', '${CORREO}', '${HORA_CONTACTO}', '${PERSONAS_INVOLUCRADAS}'`;
+       
+    var lsql = `EXEC REGISTER_DENUNCIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var denunciaRegister = result.recordset;
+
+            if (denunciaRegister[0].ID_DENUNCIA ===0) {
+                return res.status(400).send({
+                    ok: true,
+                    message: denunciaRegister[0].MESSAGE
+                });
+            } else {
+                return res.status(200).send({
+                    ok: true,
+                    denuncia: denunciaRegister[0]
+                });
+            }
+        }
+    });
+});
+// End Register Denuncia
+
+// Get Denuncias
+app.get('/denuncias/:search', (req, res, next ) => {
+    var search = req.params.search;
+    var params = `'${search}'`;
+    var lsql = `EXEC GET_DENUNCIAS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var denuncias = result.recordset;
+            
+            return res.status(200).send({
+                denuncias
+            });
+        }
+    });
+});
+// End Get Denuncias
+
+// Get Denuncia
+app.get('/verdenuncia/:id', (req, res, next ) => {
+    var id = req.params.id;
+    var params = `${id}`; 
+    var lsql = `EXEC GET_DENUNCIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var denuncia = result.recordset;
+            if (denuncia.length === 0) {
+                return  res.status(400).send({
+                    ok: true, 
+                    message: 'Denuncia no registrada.'
+                }); 
+            } else {
+                return res.status(200).send({
+                    ok: true,
+                    denuncia: denuncia[0]
+                });  
+            }
+        }
+    });
+});
+// End Get Denuncia
+
+// Delete Denuncia
+app.delete('/denuncia/:id',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var id = req.params.id;
+    var params = `${id}`; 
+    var lsql = `EXEC DELETE_DENUNCIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {   
+            var denunciaDeleted = result.recordset;
+            if (denunciaDeleted.length === 0) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'Denuncia no registrada.'
+                });
+            } else {
+                return res.status(200).send({
+                    ok: true,
+                    denuncia: denunciaDeleted[0]
+                });
+            }
+        }
+    });
+});
+// End Delete Denuncia
+
+// Denuncias
+/////////////////////////////////////////////////////////////////////////////////
 
 module.exports = app;

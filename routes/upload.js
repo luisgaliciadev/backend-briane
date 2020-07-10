@@ -24,7 +24,7 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
     var id = req.params.id;
     var id_user = req.params.id_user;
 
-    var tiposValidos = ['user', 'company']
+    var tiposValidos = ['user', 'company','denuncia']
 
     if (tiposValidos.indexOf(tipo) < 0) {
         return res.status(400).send({
@@ -44,8 +44,15 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
         var fileName = file.name.split('.');
         var extFile = fileName[fileName.length - 1];
         
-        var extValida = ['png', 'PNG', 'jpeg', 'JPEG', 'gif', 'GIF', 'jpg', 'JPG'];
+        // console.log('tipo:', tipo);
+        if (tipo === 'user' || tipo === 'company') {
+            var extValida = ['png', 'PNG', 'jpeg', 'JPEG', 'gif', 'GIF', 'jpg', 'JPG'];
+        }
 
+        if (tipo === 'denuncia') {
+            var extValida = ['png','PNG','jpeg','JPEG','jpg','JPG','pdf','txt','zip','rar','docx','xlsx', 'pptx']; 
+        }
+        // console.log('extValida:', extValida)
         if (extValida.indexOf(extFile) < 0) {
             res.status(400).send({
                 ok: false,
@@ -57,14 +64,17 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
 
             // Tempotal path
             var path = `./uploads/${tipo}/${fileName}`;
+            
             file.mv(path, err => {
                 if(err){
+                    // console.log(err);
                     res.status(500).send({
                         ok: false,
                         message: 'Error al intentar guardar el archivo.',
                         error: err
                     });
                 } else {
+                    // console.log('path:', path);
                     uploadFile(tipo, id, fileName, res, id_user);
                 }
             });
@@ -72,7 +82,7 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
     }
 });
 
-function uploadFile(tipo, id, fileName, res, id_user){    
+function uploadFile(tipo, id, fileName, res, id_user){   
     if (tipo === 'user'){
         var params = `${id}`;
         var lsql = `EXEC GET_USER ${params}`;
@@ -180,6 +190,81 @@ function uploadFile(tipo, id, fileName, res, id_user){
                                     ok: true,
                                     message: companyUpdated[0].MESSAGE,                             
                                     user: companyUpdated[0]
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    if (tipo === 'denuncia'){
+        // console.log('denuncia');        
+        var params = `${id}`;
+        // console.log(params);
+        // return;
+        var lsql = `EXEC GET_DENUNCIA ${params}`;
+        var request = new mssql.Request();
+        request.query(lsql, (err, result) => {
+            if (err) { 
+                return res.status(500).send({
+                    ok: false,
+                    message: 'Error en la petición.',
+                    error: err
+                });
+            } else {
+                var denuncia = result.recordset;
+                var ID_DENUNCIA = denuncia[0].ID_DENUNCIA;                
+                if (ID_DENUNCIA === 0) {
+                    return  res.status(400).send({
+                        ok: true, 
+                        message: 'Denuncia no registrada.'
+                    }); 
+                } else { 
+                                      
+                    if (id_user === 1) {
+                        var oldPath = './uploads/denuncia/' + denuncia[0].ARCHIVO1;
+                    } 
+                    
+                    if (id_user === 2) {
+                        var oldPath = './uploads/denuncia/' + denuncia[0].ARCHIVO2;
+                    }
+                    
+                    if (id_user === 3) {
+                        var oldPath = './uploads/denuncia/' + denuncia[0].ARCHIVO3;
+                    }
+                   
+                    // elimina la imagen anterior
+                    if (fs.existsSync(oldPath)) {
+                        // if (company[0].IMAGE.length > 0) {
+                            fs.unlinkSync(oldPath);
+                        // }
+                    }
+                    var params = `${id}, '${fileName}', '${id_user}'`;
+                    // console.log('params:', params);
+                    // return;
+                    var lsql = `EXEC UPDATE_ARCHIVO_DENUNCIA ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var denunciaUpdated = result.recordset;
+                            if (denunciaUpdated.length === 0) {
+                                return res.status(400).send({
+                                    ok: true,
+                                    message: 'Denuncia no registrado.'
+                                });
+                            } else {
+                                return res.status(200).send({
+                                    ok: true,
+                                    message: denunciaUpdated[0].MESSAGE,                             
+                                    denuncia: denunciaUpdated[0]
                                 });
                             }
                         }

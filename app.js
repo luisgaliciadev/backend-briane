@@ -56,6 +56,15 @@ var config = {
     database: 'BRIANE_APP'
 };
 
+var configServal = {
+    user: 'sa',
+    // driver='tedious',
+    password: 'Cybersac1',
+    server: '190.117.103.41',
+    //port:
+    database: 'FE_SUPERVAN'
+};
+
 // Test connection
 var connection = mssql.connect(config, function(err, res) {
     if (err) {
@@ -66,6 +75,14 @@ var connection = mssql.connect(config, function(err, res) {
         app.listen(3000, () => {
             console.log('Express Server Puerto: 3000: \x1b[32m%s\x1b[0m', 'Online');
         });
+    }
+});
+
+var connectionServal = mssql.connect(configServal, function(err, res) {
+    if (err) {
+        throw err;
+    } else {
+        console.log('Base de datos: ' + configServal.database + '\x1b[32m%s\x1b[0m', ' Online');
     }
 });
 

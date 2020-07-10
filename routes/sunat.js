@@ -193,6 +193,8 @@ app.get('/consultaruc/:ruc', (req, res, next ) => {
                         var iRuc = text.search("RUC: ");
                         var ifRuc = text.search(" -");
                         var RUC = text.slice(iRuc,ifRuc);
+                        console.log('text:', typeof(text));
+                        // console.log('ruc:', RUC);
                         RUC = RUC.substr(5,12);
 
                         var iRs = text.search("- ");
