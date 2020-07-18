@@ -577,4 +577,41 @@ app.delete('/denuncia/:id',mdAuthenticattion.verificarToken, (req, res, next ) =
 // Denuncias
 /////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////
+// REGISTER SERVAL
+
+// Get Clientes
+app.get('/cliente/:ruc',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var ruc = req.params.ruc;
+    var params = `'${ruc}'`; 
+    var lsql = `EXEC GET_CLIENTE_SERVAL ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var cliente = result.recordset[0];
+            if (!cliente) {
+                return  res.status(400).send({
+                    ok: true, 
+                    message: 'Cliente no registrado.'
+                }); 
+            } else {
+                return res.status(200).send({
+                    ok: true,
+                    cliente
+                });  
+            }
+        }
+    });
+});
+// End Get Denuncia
+
+// REGISTER SERVAL
+////////////////////////////////////////////////////////////////////////////////
+
 module.exports = app;

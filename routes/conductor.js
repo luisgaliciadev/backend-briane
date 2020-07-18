@@ -231,8 +231,6 @@ app.get('/verificarviatico/:idConductor/:dia', (req, res, next ) => {
     var dia = req.params.dia;
     var params =  `'${idConductor}', '${dia}'`;
     var lsql = `REGISTER_VIATICO ${params}`;
-    console.log(lsql);
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -251,5 +249,118 @@ app.get('/verificarviatico/:idConductor/:dia', (req, res, next ) => {
     });  
 });
 // End Verificar Viatico
+
+// Get Viaticos
+app.get('/viaticos/:desde/:hasta/:search', (req, res, next ) => {       
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var search = req.params.search;
+    var params =  `'${desde}', '${hasta}', '${search}'`;
+    var lsql = `GET_VIATICOS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viaticos = result.recordset;            
+            return res.status(200).send({
+                ok: true,
+                viaticos
+            });
+        }
+    });  
+});
+// End Get Viaticos
+
+// Get Viatico
+app.get('/viatico/:nroSemana/:zona', (req, res, next ) => {       
+    var nroSemana = req.params.nroSemana;
+    var zona = req.params.zona;
+    var params =  `${nroSemana}, '${zona}'`;
+    var lsql = `GET_VIATICO ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viatico = result.recordset[0];  
+            if(!viatico) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe el registro de viaticos'
+                });
+            }          
+            return res.status(200).send({
+                ok: true,
+                viatico
+            });
+        }
+    });  
+});
+// End Get Viatico
+
+// Get Deta Viatico
+app.get('/detaviatico/:nroSemana/:zona', (req, res, next ) => {       
+    var nroSemana = req.params.nroSemana;
+    var zona = req.params.zona;
+    var params =  `${nroSemana}, '${zona}'`;
+    var lsql = `GET_DETA_VIATICOS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viaticos = result.recordset;       
+            return res.status(200).send({
+                ok: true,
+                viaticos
+            });
+        }
+    });  
+});
+// End Get Deta Viatico
+
+// Delete viaticos
+app.delete('/viaticos/:nroSemana/:zona', (req, res, next ) => {       
+    var nroSemana = req.params.nroSemana;
+    var zona = req.params.zona;
+    var params =  `${nroSemana}, '${zona}'`;
+    var lsql = `DELETE_VIATICOS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viaticos = result.recordset;
+            if(viaticos.length == 0) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existen registros de viaticos para anular.'
+                });
+            }       
+            return res.status(200).send({
+                ok: true,
+                viaticos
+            });
+        }
+    });  
+});
+// End Delete viaticos
 
 module.exports = app;

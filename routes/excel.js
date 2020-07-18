@@ -392,7 +392,6 @@ app.get('/denuncias/:search', (req, res, next ) => {
           });
       } else {            
           var denuncias = result.recordset;       
-          console.log(denuncias);
           // You can define styles as json object
   const styles = {
       header: {
@@ -484,6 +483,173 @@ app.get('/denuncias/:search', (req, res, next ) => {
 // End Get Denuncias
 
 // Denuncias
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Operaciones
+
+// Get Guias
+app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {       
+  var idUser = req.params.idUser;
+    var search = req.params.search;
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var params =  `${idUser},'${search}','${desde}','${hasta}'`;
+    var lsql = `EXEC GET_GUIAS ${params}`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+      if (err) { 
+          return res.status(500).send({
+              ok: false,
+              message: 'Error en la petición.',
+              error: err
+          });
+      } else {            
+          var guias = result.recordset;       
+          // You can define styles as json object
+  const styles = {
+      header: {
+        fill: {
+          fgColor: {
+            rgb: '3393FF'
+          }
+        },
+        font: {
+          color: {
+            rgb: 'FFFFFFFF'
+          },
+          sz: 12,
+          bold: true,
+          // underline: true,
+          margin: 'center'
+          // numberFormat: '$#,##0.00; ($#,##0.00); -',
+        }
+      },
+      cellPink: {
+        fill: {
+          fgColor: {
+            rgb: 'FFFFCCFF'
+          }
+        }
+      },
+      cellGreen: {
+        fill: {
+          fgColor: {
+            rgb: 'FF00FF00'
+          }
+        }
+      }
+    };
+    //Array of objects representing heading rows (very top)
+    const heading = [
+       [''],
+       [{value: 'LISTADO DE GUIAS', style: styles.header}],
+       [''] // <-- It can be only values
+    ];       
+    //Here you specify the export structure
+    const specification = {
+      ITEMS: { // <- the key should match the actual data key
+        displayName: 'ITEM', // <- Here you specify the column header
+        headerStyle: styles.header, // <- Header style     
+        width: 100 // <- width in pixels
+      },
+      CORRELATIVO: {
+        displayName: 'CORRELATIVO',
+        headerStyle: styles.header,
+        width: 300 // <- width in chars (when the number is passed as string)
+      },
+      FH_GUIA: {
+        displayName: 'FECHA',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 150 // <- width in pixels
+      },
+      NOMBRE_CONDUCTOR: {
+        displayName: 'CONDUCTOR',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      PLACA_TRACTO: {
+        displayName: 'TRACTO',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      PLACA_REMOLQUE: {
+        displayName: 'REMOLQUE',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      PESO_BRUTO: {
+        displayName: 'PESO BRUTO',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      PESO_TARA: {
+        displayName: 'PESO TARA',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      PESO_NETO: {
+        displayName: 'PESO NETO',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      CORRELATIVO_OS: {
+        displayName: 'ORDEN SERVICIO',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      DS_TIPO_SERVICIO: {
+        displayName: 'SERVICIO',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      DS_ORI_DEST: {
+        displayName: 'ORIGEN',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      DESTINO: {
+        displayName: 'DESTINO',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+    }
+    const dataset = guias;
+    const merges = [
+      { start: { row: 2, column: 1 }, end: { row: 2, column:  13} }
+     
+    ]
+   
+    const report = excel.buildExport(
+      [ 
+        {
+          name: 'Report', // <- Specify sheet name (optional)
+          heading: heading, // <- Raw heading array (optional)
+          merges: merges, // <- Merge cell ranges
+          specification: specification, // <- Report specification
+          data: dataset // <-- Report data
+        }
+      ]
+    ); 
+    res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+    return res.status(200).send(report);
+      }
+  });
+});
+// End Get Denuncias
+
+// Operaciones
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 

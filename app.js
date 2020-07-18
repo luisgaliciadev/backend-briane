@@ -42,6 +42,7 @@ var searchRoutes = require('./routes/search');
 var registerRoutes = require('./routes/register');
 var conductorRoutes = require('./routes/conductor');
 var mygeotabRoutes = require('./routes/mygeotab');
+var operaciones = require('./routes/operaciones');
 
 // Connetion BD MSSQL SERVER
 app.set('view engine', 'ejs');
@@ -53,7 +54,13 @@ var config = {
     password: 'Cybersac1',
     server: '190.117.103.41',
     //port:
-    database: 'BRIANE_APP'
+    database: 'BRIANE_APP',
+    connectionTimeout: 300000,
+    requestTimeout: 300000,
+    pool: {
+        idleTimeoutMillis: 300000,
+        max: 100
+    }
 };
 
 var configServal = {
@@ -62,7 +69,13 @@ var configServal = {
     password: 'Cybersac1',
     server: '190.117.103.41',
     //port:
-    database: 'FE_SUPERVAN'
+    database: 'FE_SUPERVAN',
+    connectionTimeout: 300000,
+    requestTimeout: 300000,
+    pool: {
+        idleTimeoutMillis: 300000,
+        max: 100
+    }
 };
 
 // Test connection
@@ -100,5 +113,6 @@ app.use('/api/search', searchRoutes);
 app.use('/api/register', registerRoutes);
 app.use('/api/conductor', conductorRoutes);
 app.use('/api/mygeotab', mygeotabRoutes);
+app.use('/api/operaciones', operaciones);
 
 app.use('/api', appRoutes);
