@@ -584,7 +584,7 @@ app.delete('/denuncia/:id',mdAuthenticattion.verificarToken, (req, res, next ) =
 app.get('/cliente/:ruc',mdAuthenticattion.verificarToken, (req, res, next ) => {
     var ruc = req.params.ruc;
     var params = `'${ruc}'`; 
-    var lsql = `EXEC GET_CLIENTE_SERVAL ${params}`;
+    var lsql = `EXEC GET_CLIENTE ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 

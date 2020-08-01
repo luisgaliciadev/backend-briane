@@ -553,8 +553,18 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         headerStyle: styles.header, // <- Header style     
         width: 100 // <- width in pixels
       },
+      ID_GUIA: { // <- the key should match the actual data key
+        displayName: 'ID', // <- Here you specify the column header
+        headerStyle: styles.header, // <- Header style     
+        width: 100 // <- width in pixels
+      },
       CORRELATIVO: {
-        displayName: 'CORRELATIVO',
+        displayName: 'NRO. GUIA TRANSPORTE',
+        headerStyle: styles.header,
+        width: 300 // <- width in chars (when the number is passed as string)
+      },
+      NRO_GUIA_CLIENTE: {
+        displayName: 'NRO. GUIA CLIENTE',
         headerStyle: styles.header,
         width: 300 // <- width in chars (when the number is passed as string)
       },
@@ -627,7 +637,7 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
     }
     const dataset = guias;
     const merges = [
-      { start: { row: 2, column: 1 }, end: { row: 2, column:  13} }
+      { start: { row: 2, column: 1 }, end: { row: 2, column:  15} }
      
     ]
    

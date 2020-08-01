@@ -10,6 +10,8 @@ var jwt = require('jsonwebtoken');
 
 var excel = require('node-excel-export');
 
+var async = require("async");
+
 // mssql
 var mssql = require('mssql');
 var bodyParser = require('body-parser');
@@ -131,7 +133,8 @@ app.post('/guia', mdAuthenticattion.verificarToken, (req, res) => {
     var TIPO_EMPRESA = body.TIPO_EMPRESA;
     var params = `'${CORRELATIVO}','${FECHA}','${FECHA_HORA_FIN}','${FH_TRASLADO}',${ID_CONDUCTOR},${ID_ORDEN_SERVICIO},${ID_REMOLQUE},${ID_TRACTO},'${NRO_GUIA_CLIENTE}','${NRO_PERMISO}','${OBSERVACION}',${PESO_BRUTO},${PESO_NETO},${PESO_TARA},'${SERIAL}',${TIEMPO_VIAJE},${ID_USUARIO_BS},${ID_EMPRESA},'${TIPO_EMPRESA}'`;
     var request = new mssql.Request();
-    var lsql = `EXEC FE_SUPERVAN_PRUEBA.DBO.REGISTER_GUIA ${params}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.REGISTER_GUIA ${params}`;
+    // var lsql = `EXEC FE_SUPERVAN_PRUEBA.DBO.REGISTER_GUIA ${params}`;
     request.query(lsql, (err, result) => {
         if (err) { 
             return res.status(500).send({
@@ -210,7 +213,8 @@ app.put('/guia', mdAuthenticattion.verificarToken, (req, res) => {
     var ID_USUARIO_BS = body.ID_USUARIO_BS;
     var params = `'${CORRELATIVO}','${FECHA}','${FECHA_HORA_FIN}','${FH_TRASLADO}',${ID_CONDUCTOR},${ID_ORDEN_SERVICIO},${ID_REMOLQUE},${ID_TRACTO},'${NRO_GUIA_CLIENTE}','${NRO_PERMISO}','${OBSERVACION}',${PESO_BRUTO},${PESO_NETO},${PESO_TARA},'${SERIAL}',${TIEMPO_VIAJE},${ID_USUARIO_BS},${ID_GUIA}`;
     var request = new mssql.Request();
-    var lsql = `EXEC FE_SUPERVAN_PRUEBA.DBO.UPDATE_GUIA ${params}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.UPDATE_GUIA ${params}`;
+    // var lsql = `EXEC FE_SUPERVAN_PRUEBA.DBO.UPDATE_GUIA ${params}`;
     request.query(lsql, (err, result) => {
         if (err) { 
             return res.status(500).send({
@@ -262,11 +266,12 @@ app.get('/guias/:idUser/:search/:desde/:hasta', mdAuthenticattion.verificarToken
 });
 // End Get guias
 
-// Get guia
+// Delete guia
 app.delete('/guia/:id/', mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var idGuia = req.params.id;
     var params =  `${idGuia}`;
-    var lsql = `EXEC FE_SUPERVAN_PRUEBA.DBO.DELETE_GUIA ${params}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.DELETE_GUIA ${params}`;
+    // var lsql = `EXEC FE_SUPERVAN_PRUEBA.DBO.DELETE_GUIA ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -290,8 +295,371 @@ app.delete('/guia/:id/', mdAuthenticattion.verificarToken, (req, res, next ) => 
         }
     });
 });
-// End Get guia
+// End Delete guia
 
+// Get years
+app.get('/years', (req, res, next ) => {   
+    var lsql = `SELECT * FROM VIEW_YEARS`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var years = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                years
+            });
+        }
+    });
+});
+// End Get years
 
+// Get motivos no op
+app.get('/motivonoop', (req, res, next ) => {   
+    var lsql = `SELECT * FROM VIEW_OP_MOTIVO_NO_OPERATIVIDAD`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var motivos = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                motivos
+            });
+        }
+    });
+});
+// End Get motivos no op
+
+// // Get productividad
+// app.get('/productividadop/:tipo/:semana/:year/:desde/:hasta',mdAuthenticattion.verificarToken, (req, res, next ) => {
+//     var tipo = req.params.tipo;
+//     var semana = req.params.semana;
+//     var year = req.params.year;
+//     var desde = req.params.desde;
+//     var hasta = req.params.hasta;
+//     var params =  `${tipo},${semana},${year},'${desde}','${hasta}'`;   
+//     var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIAJES_DIA_TURNO_TOTAL ${params}`;
+//     var request = new mssql.Request();
+//     request.query(lsql, (err, result) => {
+//         if (err) { 
+//             return res.status(500).send({
+//                 ok: false,
+//                 message: 'Error en la petición.',
+//                 error: err
+//             });
+//         } else {
+//             var productividad = result.recordset;   
+//             return res.status(200).send({
+//                 ok: true,
+//                 productividad
+//             });
+//         }
+//     });
+// });
+// // End Get productividad
+
+// Get dias productividad
+app.get('/diasproductividadop/:semana/:year/:zona',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var semana = req.params.semana;
+    var year = req.params.year;
+    var zona = req.params.zona;
+    var params =  `${semana},${year},${zona}`;   
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIAJES_DIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var diasProductividad = result.recordset;
+            var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA, NRO_SEMANA, ANIO,NOMBRE_DIA 
+            FROM VIEW_DIAS WHERE (NRO_SEMANA = ${semana}) AND (ANIO = ${year})`;
+            var request = new mssql.Request();
+            request.query(lsql, (err, result) => {
+                if (err) { 
+                    return res.status(500).send({
+                        ok: false,
+                        message: 'Error en la petición.',
+                        error: err
+                    });
+                } else {
+                    var dias = result.recordset;
+                    var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIAJES_TURNO_DIA ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var diasTurnoProductividad = result.recordset;
+                            // console.log('cantidad registros:', diasTurnoProductividad.length);
+                            var i = -1;
+                            var j = -1;
+                            var turnos = [];
+                            dias.forEach(function (dia) {
+                                i++;
+                               
+                                j = -1; 
+                                diasProductividad.forEach(function (diasProd) {
+                                    j++;
+
+                                    if (zona == 1) {
+                                        const resultado = diasTurnoProductividad.find( viajes => 
+                                            viajes.PLACA_TRACTO === diasProd.PLACA_TRACTO && viajes.NOMBRE_CONDUCTOR === diasProd.NOMBRE_CONDUCTOR && viajes.FH_GUIA === dia.FECHA 
+                                        );
+                                        
+                                        var turno1 = 0
+                                        var turno2 = 0
+                                        var turno3 = 0
+                                        
+                                        if (resultado) {
+
+                                            if(resultado.TURNO1) {
+                                                turno1 = resultado.TURNO1
+                                            }
+
+                                            if(resultado.TURNO2) {
+                                                turno2 = resultado.TURNO2
+                                            }
+                                            if(resultado.TURNO3) {
+                                                turno3 = resultado.TURNO3
+                                            }
+
+                                            turnos = {
+                                                fecha: dia.FECHA,
+                                                turno1,
+                                                turno2,
+                                                turno3,
+                                                motivo1: 0,
+                                                motivo2: 0,
+                                                motivo3: 0
+                                            };
+                                        } else {
+                                            turnos = {
+                                                fecha: dia.FECHA,
+                                                turno1: 0,
+                                                turno2: 0,
+                                                turno3: 0,
+                                                motivo1: 0,
+                                                motivo2: 0,
+                                                motivo3: 0
+                                            };
+                                        }
+
+                                        if (i==0) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia1 = turnos;
+                                        }
+
+                                        if (i==1) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia2 = turnos;
+                                        }
+
+                                        if (i==2) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia3 = turnos;
+                                        }
+
+                                        if (i==3) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia4 = turnos;
+                                        }
+
+                                        if (i==4) {
+                                            // console.log(j);
+                                        diasProductividad[j].dia5 = turnos;
+                                        }
+
+                                        if (i==5) {
+                                            // console.log(j);
+                                        diasProductividad[j].dia6 = turnos;
+                                        }
+
+                                        if (i==6) {
+                                        diasProductividad[j].dia7 = turnos;
+                                        }
+                                        // console.log(j)
+                                    }  
+
+                                    if (zona == 2) {
+                                       
+                                        const resultado = diasTurnoProductividad.find( viajes => 
+                                            viajes.PLACA_TRACTO === diasProd.PLACA_TRACTO && viajes.NOMBRE_CONDUCTOR === diasProd.NOMBRE_CONDUCTOR && viajes.FH_GUIA === dia.FECHA 
+                                        );
+                                        
+                                        var turno1 = 0
+
+                                        if (resultado) {
+
+                                            if (resultado.VIAJES) {
+                                               turno1 = resultado.VIAJES
+                                            }
+
+                                            turnos = {
+                                                fecha: dia.FECHA,
+                                                turno1,                                         
+                                                motivo1: 0                                                  
+                                            };
+
+                                        } else {
+                                            turnos = {
+                                                fecha: dia.FECHA,
+                                                turno1,                                         
+                                                motivo1: 0                                                  
+                                            };
+                                        }                                       
+                                        
+                                        if (i==0) {
+                                            // console.log(i);
+                                            diasProductividad[j].dia1 = turnos;
+                                        }
+
+                                        if (i==1) {
+                                            // console.log(i);
+                                            diasProductividad[j].dia2 = turnos;
+                                        }
+
+                                        if (i==2) {
+                                            // console.log(i);
+                                            diasProductividad[j].dia3 = turnos;
+                                        }
+
+                                        if (i==3) {
+                                            // console.log(i);
+                                            diasProductividad[j].dia4 = turnos;
+                                        }
+
+                                        if (i==4) {
+                                            // console.log(i);
+                                            diasProductividad[j].dia5 = turnos;
+                                        }
+
+                                        if (i==5) {
+                                            // console.log(i);
+                                            diasProductividad[j].dia6 = turnos;
+                                        }
+
+                                        if (i==6) {
+                                            // console.log(i);
+                                            diasProductividad[j].dia7 = turnos;
+                                        }
+                                    }
+
+                                    if (zona == 3) {
+                                        
+                                        const resultado = diasTurnoProductividad.find( viajes => 
+                                            viajes.PLACA_TRACTO === diasProd.PLACA_TRACTO && viajes.NOMBRE_CONDUCTOR === diasProd.NOMBRE_CONDUCTOR && viajes.FH_GUIA === dia.FECHA 
+                                        );
+                                        
+                                        var turno1 = 0
+                                        var turno2 = 0
+                                        // console.log(resultado);
+                                        if (resultado) {
+
+                                            if(resultado.DIA) {
+                                                turno1 = resultado.DIA
+                                            }
+
+                                            if(resultado.NOCHE) {
+                                                turno2 = resultado.NOCHE
+                                            }
+                                               
+                                            turnos = {
+                                                fecha: dia.FECHA,
+                                                turno1,
+                                                turno2,                                            
+                                                motivo1: 0,
+                                                motivo2: 0                                                   
+                                            };
+                                        } else {
+                                            turnos = {
+                                                fecha: dia.FECHA,
+                                                turno1: 0,
+                                                turno2: 0,                                                   
+                                                motivo1: 0,
+                                                motivo2: 0                                                   
+                                            };
+                                        }
+
+                                        if (i==0) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia1 = turnos;
+                                        }
+
+                                        if (i==1) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia2 = turnos;
+                                        }
+
+                                        if (i==2) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia3 = turnos;
+                                        }
+
+                                        if (i==3) {
+                                            // console.log(j);
+                                            diasProductividad[j].dia4 = turnos;
+                                        }
+
+                                        if (i==4) {
+                                            // console.log(j);
+                                        diasProductividad[j].dia5 = turnos;
+                                        }
+
+                                        if (i==5) {
+                                            // console.log(j);
+                                        diasProductividad[j].dia6 = turnos;
+                                        }
+
+                                        if (i==6) {
+                                        diasProductividad[j].dia7 = turnos;
+                                        }
+                                        // console.log(j)
+                                    }  
+                                });
+                            });
+
+                            return res.status(200).send({
+                                ok: true,
+                                // diasTurnoProductividad,
+                                idZona: zona,
+                                dias,
+                                diasProductividad: diasProductividad
+                            });
+                        }
+                    });            
+                }
+            });
+        }
+    });
+});
+// End Get productividad
+
+async function viajesTurno(parametros) {
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIAJES_TURNO_DIA ${parametros}`;
+    var request = new mssql.Request();
+    let response = await request.query(lsql);
+    var viajesTurno = response.recordset;
+    // console.log('viajesTurno: ', viajesTurno);
+    return viajesTurno;
+}
 
 module.exports = app;

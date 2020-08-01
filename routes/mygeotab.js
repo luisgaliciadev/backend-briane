@@ -178,7 +178,8 @@ app.get('/statusdivices', (req, res) => {
                             device: infoStatus[i].device,
                             isDriving: infoStatus[i].isDriving,
                             address: addressResults[i],
-                            locationAddress: addressResults[i].formattedAddress
+                            locationAddress: addressResults[i].formattedAddress,
+                            id: infoStatus[i].device.id
                         });
                     }
                     // console.log(results);
