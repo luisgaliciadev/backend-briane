@@ -306,7 +306,7 @@ app.put('/movemodule/:move', mdAuthenticattion.verificarToken, (req, res, next )
     var orden = body.ORDEN
     var idTypeMenu = body.ID_TYPE_MENU
     var params = `${idModule}, ${idTypeMenu}, ${orden}, ${move}`;
-    console.log(params);
+    // console.log(params);
     var lsql = `EXEC MOVE_MODULE ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -373,7 +373,7 @@ app.post('/role', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var body = req.body; 
     var DS_ROLE = body.dsRoles.toUpperCase();
     var params = `'${DS_ROLE}'`;
-    console.log(params);
+    // console.log(params);
     var lsql = `EXEC REGISTER_ROLE ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -408,7 +408,7 @@ app.put('/role', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var ID_ROLE = body.ID_ROLE;
     var DS_ROLE = body.DS_ROLE.toUpperCase();
     var params = `${ID_ROLE}, '${DS_ROLE}'`;
-    console.log(params);
+    // console.log(params);
     var lsql = `EXEC UPDATE_ROLE ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -447,7 +447,7 @@ app.put('/role', mdAuthenticattion.verificarToken, (req, res, next ) => {
 app.delete('/role/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var ID_ROLE = req.params.id;
     var params = `${ID_ROLE}`;
-    console.log(params);
+    // console.log(params);
     var lsql = `EXEC DELETE_ROLE ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -482,7 +482,7 @@ app.put('/rolesuser', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var ID_ROLE = body.ID_ROLE;
     var ACCESS = body.ACCESS;
     var params = `${ID_MODULE}, ${ID_ROLE}, '${ACCESS}'`;
-    console.log(params);
+    // console.log(params);
     var lsql = `EXEC UPDATE_ROLES_MODULES ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {

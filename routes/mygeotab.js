@@ -1,21 +1,11 @@
 'use strict'
 
 var express = require('express');
-
 var mygeotab = require('mg-api-node');
-
-// mssql
-//var mssql = require('mssql');
 var bodyParser = require('body-parser');
-//var http = require('http');
-//var path = require('path');
-
 var app = express();
-
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
-
-//var mdAuthenticattion = require('../middlewares/authenticated');
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Funciones
@@ -23,13 +13,10 @@ app.use(bodyParser.json());
 function sortJSON(data, key, orden) {
     return data.sort(function (a, b) {
         var x = parseFloat(a[key]),
-        y = parseFloat(b[key]);
-        // console.log('x:', typeof(x))
-
+        y = parseFloat(b[key]);     
         if (orden === 'asc') {
             return ((x < y) ? -1 : ((x > y) ? 1 : 0));
         }
-
         if (orden === 'desc') {
             return ((x > y) ? -1 : ((x < y) ? 1 : 0));
         }
@@ -50,9 +37,7 @@ function sumarDias(fecha, dias){
 
 // Get divice
 app.get('/divices', (req, res) => {
-
     var api = new mygeotab('luis.galicia@supervan.pe', 'Lgbriane2020', 'supervan_peru');
-    
     api.authenticate(function(err, result) {
         if(err){
             return res.status(500).send({
@@ -61,7 +46,6 @@ app.get('/divices', (req, res) => {
                 error: err
             });
         }
-      
         api.call('Get', {
           typeName: 'Device',
           resultsLimit: 150
@@ -84,9 +68,7 @@ app.get('/divices', (req, res) => {
 
 // Get status divice info
 app.get('/statusdiviceinfo', (req, res) => {
-
     var api = new mygeotab('luis.galicia@supervan.pe', 'Lgbriane2020', 'supervan_peru');
-    
     api.authenticate(function(err, result) {
         if(err){
             return res.status(500).send({
@@ -95,7 +77,6 @@ app.get('/statusdiviceinfo', (req, res) => {
                 error: err
             });
         }
-      
         api.call('Get', {
           typeName: 'DeviceStatusInfo',    
           resultsLimit: 150
@@ -122,7 +103,6 @@ app.get('/statusdiviceinfo', (req, res) => {
                 idDriver: DeviceStatusInfos.driver.id
                 });
             });
-
             return res.status(200).send({
                 ok: true,
                 DeviceStatusInfo,
@@ -135,9 +115,7 @@ app.get('/statusdiviceinfo', (req, res) => {
 
 // Get status divices
 app.get('/statusdivices', (req, res) => {
-
     var api = new mygeotab('luis.galicia@supervan.pe', 'Lgbriane2020', 'supervan_peru');
-    
     api.authenticate(function(err, result) {
         if(err){
             return res.status(500).send({
@@ -197,7 +175,6 @@ app.get('/statusdivices', (req, res) => {
 
 // Get total odometer
 app.get('/totalodometer', (req, res) => {
-
     var api = new mygeotab('luis.galicia@supervan.pe', 'Lgbriane2020', 'supervan_peru');
     
         api.authenticate(function(err, result) {

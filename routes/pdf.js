@@ -2,115 +2,384 @@
 
 var express = require('express');
 
-// jwt
-var jwt = require('jsonwebtoken');
-
-var excel = require('node-excel-export');
-
 // mssql
 var mssql = require('mssql');
 var bodyParser = require('body-parser');
-var http = require('http');
-var path = require('path');
-
-var fs = require('fs');
 var pdf = require('html-pdf');
-
 var app = express();
+const path = require('path');
 
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
-
 var mdAuthenticattion = require('../middlewares/authenticated');
 
 
 // ////////////////////////////////////////////////////////////////////////////////////////////////
-// User
+// Conductores
 
-// // GET pdf
-app.get('/', (req, res, next ) => {
-
-    // var lsql = `EXEC GET_USERS 1`   
-    // var request = new mssql.Request();
-
-    // request.query(lsql, (err, result) => {
-    //     if (err) { 
-    //         return res.status(500).send({
-    //             ok: false,
-    //             message: 'Error en la petición.',
-    //             error: err
-    //         });
-    //     } else {            
-    //         var users = result.recordset; 
-    //         var total = users.length     
-
-
-    //         return res.status(200).send({
-    //             ok: true,                             
-    //             users: users
-    //         });
-    //     }
-    // });
-
-    
-    var tabla  =`
-            <td>luis</td>                                   
-            <td>Galicia</td>
-            <td>luisgalic@gmail.com</td>
-    `;
-    const content = `
-    <html>
-    <head>
-      <meta charset="utf8">
-      <title>Listado de Usuarios</title>
-      <h2>Listado de Usuarios</h2>
-    </head>
-    <body>
-      <div class="page">
-        <div class="bottom">
-          <div class="line">Marc Bachmann</div>
-          <div class="line">cto</div>
-  
-          <div class="group">
-            <div class="line">p: +41 00 000 00 00</div>
-            <div class="line">github: marcbachmann</div>
-          </div>
-          <div class="group">
-            <div class="line">suitart ag</div>
-            <div class="line">räffelstrasse 25</div>
-            <div class="line">8045 zürich</div>
-          </div>
-        </div>
-      </div>
-      <div class="page">
-        <img class="logo" src="{{image}}">
-        <div class="bottom">
-            <div class="line center">8045 zürich</div>
-        </div>
-      </div>
-    </body>
-  </html>
-`;
-
-pdf.create(content).toFile('./uploads/pdf/html-pdf.pdf', function(err, resp) {
-    if (err){
-        console.log(err);
+// Generar pdf comprobantes viaticos
+app.put('/movilidadcond/:idViatico/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {
+  var idViatico = req.params.idViatico;
+  var idUser = req.params.idUser;
+  var params =  `${idViatico}, ${idUser}`;
+  var lsql = `EXEC FE_SUPERVAN.DBO.SP_GEN_REC_VIATICOS ${params}`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+      return res.status(500).send({
+        ok: false,
+        message: 'Error en la petición.',
+        error: err
+      });
     } else {
-        console.log(resp);
-        return res.status(200).send({
+      var viatico = result.recordset[0];
+      if (!viatico.ID_VIATICO) {
+        return res.status(400).send({
             ok: true,
-            resp: resp
-        });
+            message: viatico.MESSAGE
+        });    
+      }
+      params =  `${idViatico}`;
+      var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIEW_OP_PLANILLA_VIATICO ${params}`;
+      var request = new mssql.Request();
+      request.query(lsql, (err, result) => {
+        if (err) { 
+          return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+          });
+        } else {
+          var conductores = result.recordset;
+          if (conductores.length == 0) {
+            return res.status(400).send({
+                ok: true,
+                message: 'No existen registros.'
+            });    
+          }        
+          var cantConductores = conductores.length;
+          var razonSocial = conductores[0].NOMBRE_EMPRESA;
+          var ruc = conductores[0].RUC_EMPRESA;
+          var css = '';
+          var contenido = '';
+          var nombreDoc = '';
+          var nroPlanilla = '';
+          var nroSemana = conductores[0].NRO_SEMANA;
+          var year = conductores[0].ANIO;
+          var fhEmision = conductores[0].FH_EMISION;     
+          var firmaConductor; 
+          var firmaAutorizado = `http://localhost:3000/api/image/firma_viaticos/autorizado.PNG`;
+          var firmaTesoreria = `http://localhost:3000/api/image/firma_viaticos/tesoreria.PNG`;
+          var firmaRevisado = `http://localhost:3000/api/image/firma_viaticos/revisado.PNG`;   
+          lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA, NRO_SEMANA, ANIO,NOMBRE_DIA 
+                    FROM VIEW_DIAS WHERE (NRO_SEMANA = ${nroSemana}) AND (ANIO = ${year})`;
+          request = new mssql.Request();
+          request.query(lsql, (err, result) => {
+            if (err) { 
+              return res.status(500).send({
+                  ok: false,
+                  message: 'Error en la petición.',
+                  error: err
+              });
+            } else {
+              var dias = result.recordset;
+              lsql = `EXEC FE_SUPERVAN.DBO.SP_VIEW_OP_DETA_PLANILLA_VIATICO ${params}`;
+              request = new mssql.Request();
+              request.query(lsql, (err, result) => {
+                if (err) { 
+                  return res.status(500).send({
+                    ok: false,
+                    message: 'Error en la petición.',
+                    error: err
+                  });
+                } else {
+                  var viaticos = result.recordset;
+            
+                  var detalles = [];
+                  var i = 0;
+                  var tablaDetalle = '';
+                  var totalMonto = 0;
+                
+                  conductores.forEach(function (conductor) {
+                    i++;
+                    tablaDetalle = '';
+                    totalMonto = 0;
+                    var ruta = '';
+                    var unidad = ''
+                    var arrayRutaPlaca = [];
+                    dias.forEach(function (dia) {                  
+                      const resultado = viaticos.find( datos => 
+                        datos.NOMBRE_APELLIDO === conductor.NOMBRE_APELLIDO && datos.FECHA === dia.FECHA 
+                      );
+                     
+                      if(resultado.RUTA) {
+                        arrayRutaPlaca = resultado.RUTA.split('|');
+                        ruta = arrayRutaPlaca[0];
+                        unidad = arrayRutaPlaca[1];
+                      } else {
+                        // console.log('conductor.IDENTIFICACION:', conductor.IDENTIFICACION)
+                        // console.log('resultado.RUTA:', resultado.RUTA)
+                      }
+
+                      detalles.push({  
+                        fecha: resultado.FECHA,      
+                        dni: resultado.IDENTIFICACION,
+                        dia: resultado.DIA,
+                        mes: resultado.MES,
+                        anio: resultado.ANIO,
+                        motivo : 'Movilidad',
+                        destino: ruta,
+                        viaje: 1,
+                        pago: resultado.TOTAL,
+                        placa: unidad,
+                        cc: '100100003'                               
+                      });             
+                      var detalle = detalles.find( deta =>                       
+                        deta.dni === conductor.IDENTIFICACION && deta.fecha == dia.FECHA                        
+                      );                      
+                      if (detalle) {
+                        let dni = detalle.dni;  
+                        let dia = detalle.dia;  
+                        let mes = detalle.mes;  
+                        let anio = detalle.anio;  
+                        let motivo = detalle.motivo;                         
+                        let destino = detalle.destino;  
+                        let viaje = detalle.viaje;  
+                        let pago = detalle.pago;  
+                        let placa = detalle.placa;  
+                        let cc = detalle.cc;                        
+                        if (pago > 0) {
+                          totalMonto = totalMonto + pago;
+                          tablaDetalle = tablaDetalle + '\n' + `
+                          <tr>                   
+                            <td>${dia}</td>
+                            <td>${mes}</td>
+                            <td>${anio}</td>
+                            <td>${motivo}</td>
+                            <td>${destino}</td> 
+                            <td>${viaje}</td>
+                            <td>S/. ${pago}</td>
+                            <td>${placa}</td>
+                            <td>${cc}</td>
+                          </tr>`;
+                        } 
+                      }                      
+                    });
+                    nombreDoc = conductor.ID_VIATICO + '-' + conductor.IDENTIFICACION;
+                    nroPlanilla = conductor.NRO_RECIBO;
+                    css = `
+                    .table-dt {
+                      border-collapse: collapse;
+                      border: 1px solid;
+                      border-top: 0px solid;
+                      width: 100%;
+                      font-size: 12px;
+                    }
+                    .table-dt td  {  
+                      border: 1px solid;
+                      border-top: 0px solid;
+                      text-align:center;
+                    }
+
+                    .table-dt thead td  {  
+                      font-weight: bold;
+                      background: #AEAEAE;
+                    }
+                    
+                    .table-firma {
+                      border-collapse: collapse;
+                      border: 0px solid;
+                      border-top: 0px solid;
+                      width: 100%;
+                    }
+                    .table-firma td  {  
+                      border: 0px solid;
+                      border-top: 0px solid;
+                      text-align:center;
+                    }
+
+                    html {
+                      width: 725px;
+                      margin: 1rem;
+                      padding: 1rem;
+                    }
+                    `;                    
+                    firmaConductor = `http://localhost:3000/api/image/firma_conductor/${conductor.IDENTIFICACION}.PNG`;
+                    contenido = `
+                    <html>
+                      <head>
+                        <style>
+                          ${css}
+                        </style>
+                        <meta charset="utf8">
+                        <title>PLANILLA POR GASTOS DE MOVILIDAD - POR TRABAJADOR</title>
+                        <div style="border: 1px solid;">
+                          <div>
+                            <h4 align="center" style="border-bottom: 1px solid; margin-top:0px;">PLANILLA POR GASTOS DE MOVILIDAD - POR TRABAJADOR</h4>
+                          </div>
+                          <table style="border-collapse: collapse; margin-left: 20px; margin-bottom: 20px">
+                            <tr>
+                              <td>Número (*):</td>
+                              <td style="border: 1px solid;">${nroPlanilla}</td>
+                            </tr>
+                            <tr>
+                              <td>Razon Social:</td>
+                              <td style="border: 1px solid;">${razonSocial}</td>            
+                            </tr>
+                            <tr>
+                              <td>RUC:</td>
+                              <td style="border: 1px solid;">${ruc}</td>            
+                            </tr>
+                          </table>
+                          <table style="border-collapse: collapse; float: right; margin-top: -90px; margin-right: 20px">
+                            <tr>
+                              <td>Fecha de Emisión:</td>
+                              <td style="border: 1px solid;">${fhEmision}</td>
+                            </tr>
+                            <tr>
+                              <td>Periodo:</td>
+                              <td style="border: 1px solid;">07-2020</td>            
+                            </tr>
+                          </table>
+                        </div>
+                        <div style="border: 1px solid; border-top: 0px;">
+                          <table style="border-collapse: collapse; margin-left: 20px; margin-bottom: 20px;">
+                            <tr>
+                              <td>Datos del TRabajador (**):</td>
+                              <td></td>
+                            </tr>
+                            <tr>
+                              <td>Nombres y Apellidos:</td>
+                              <td style="border: 1px solid;">${conductor.NOMBRE_APELLIDO}</td>            
+                            </tr>
+                            <tr>
+                              <td>D.N.I.:</td>
+                              <td style="border: 1px solid;">${conductor.IDENTIFICACION}</td>            
+                            </tr>
+                          </table>
+                        </div>
+                      </head>
+                      <body>
+                        <table class="table-dt"  style="border-collapse: collapse;" border="1">
+                          <thead>
+                            <tr>            
+                              <td colspan="3">Fecha del Gasto (**):</td>          
+                              <td colspan="2">Desplazamiento</td> 
+                              <td colspan="2">Monto gastado por (**)</td>
+                              <td style="border-bottom: 0px;"></td>
+                              <td style="border-bottom: 0px;"></td>      
+                            </tr>
+                            <tr>
+                              <td>Día</td>
+                              <td>Mes</td>
+                              <td>Año</td> 
+                              <td>Motivo</td> 
+                              <td>Destino</td>  
+                              <td>Viaje</td>
+                              <td>Día</td>
+                              <td>Unidad de Gestión</td>
+                              <td>Centro de Costo</td>                             
+                            </tr>
+                          </thead>
+                          <tbody>
+                              ${tablaDetalle}
+                              <td style="border-color: transparent"></td>
+                              <td style="border-color: transparent"></td>
+                              <td style="border-color: transparent"></td> 
+                              <td style="border-color: transparent"></td> 
+                              <td style="border-color: transparent"></td>  
+                              <td style="border-color: transparent; border-right: 1px solid"></td>
+                              <td>S/. ${totalMonto}</td>
+                              <td style="border-color: transparent"></td>
+                              <td style="border-color: transparent"></td>
+                          </tbody>
+                        </table>
+                        
+                        
+                        <div style="margin-top: 40px">
+                          <table class="table-firma"  style="border-collapse: collapse;">
+                            <tr>            
+                              <td><img src="${firmaConductor}" style="height: 65px; width: 70px; margin-bottom:0px;"></td>  
+                              <td><img src="${firmaTesoreria}" style="height: 65px; width: 70px;"></td>      
+                            </tr>
+                            <tr>            
+                              <td>_____________________</td>  
+                              <td>_____________________</td>      
+                            </tr>
+                            <tr>            
+                              <td>Firma del Trabajador</td>
+                              <td>Tesoreria</td>        
+                            </tr>
+                            
+                            <tr style="height: 50px">            
+                              <td></td>  
+                              <td></td>      
+                            </tr> 
+
+                            <tr>            
+                              <td><img src="${firmaRevisado}" style="height: 65px; width: 70px;"></td>  
+                              <td><img src="${firmaAutorizado}" style="height: 65px; width: 70px;"></td>      
+                            </tr>                       
+
+                            <tr>            
+                              <td>_____________________</td>  
+                              <td>_____________________</td>      
+                            </tr>
+                            <tr>            
+                              <td>Revisado por</td>
+                              <td>Autorizado por</td>        
+                            </tr>
+                          </table>
+                        </div>
+                      
+                        <div style="border-top: 3px solid; margin-top: 5px;">
+                          <p style="font-size: 12px;">
+                            Base Legal: Inciso a1) del artículo 37° del TUO de la Ley del Impuesto a la Renta e inciso v) del artículo 21° del Reglamento de la ley del impuesto a la Renta.
+                          </p
+
+                          <p  style="font-size: 12px;">
+                            (*)  Numeración de la planilla
+                          </p>
+
+                          <p  style="font-size: 12px;">
+                            (**) La falta de algunos de estos datos inhabilita la planilla para la sustentación del gasto que corresponda a tal desplazamiento.
+                          </p>
+                        </div>
+                        
+                      </body>
+                    </html>`;
+                    // if (i==1) {
+                      crearPdf(contenido,nombreDoc);
+                    // }
+                    
+                  });
+                  
+                  return res.status(200).send({
+                    ok: true,
+                    message: 'Se han generado '+ i + ' comprobantes.'      
+                  });
+                }              
+              });
+            }
+          });
+        }
+      });
     }
-});   
+  });
 });
-// // Fin pdf
+// // Fin Generar pdf comprobantes viaticos
 
-
-// PETICIONES PARA USUARIOS
-// ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
+// Crear PDF
+function crearPdf(content, nombreDoc){  
+   pdf.create(content).toFile(`./uploads/viaticos-conductor/${nombreDoc}.pdf`, function(err, resp) {
+    if (err){
+      console.log(err);
+    } else {
+      // console.log(nombreDoc + '.PDF creado.');
+      return 1;
+    }
+  }); 
+}
+// Fin crear PDF
 
 module.exports = app;

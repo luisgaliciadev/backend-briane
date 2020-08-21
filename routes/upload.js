@@ -23,8 +23,8 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
     var tipo = req.params.tipo;
     var id = req.params.id;
     var id_user = req.params.id_user;
-
-    var tiposValidos = ['user', 'company','denuncia']
+    
+    var tiposValidos = ['user', 'company','denuncia','viaticos-conductor']
 
     if (tiposValidos.indexOf(tipo) < 0) {
         return res.status(400).send({
@@ -51,6 +51,10 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
 
         if (tipo === 'denuncia') {
             var extValida = ['png','PNG','jpeg','JPEG','jpg','JPG','pdf','txt','zip','rar','docx','xlsx', 'pptx']; 
+        }
+
+        if (tipo === 'viaticos-conductor') {
+            var extValida = ['pdf']; 
         }
         // console.log('extValida:', extValida)
         if (extValida.indexOf(extFile) < 0) {

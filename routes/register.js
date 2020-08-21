@@ -578,7 +578,7 @@ app.delete('/denuncia/:id',mdAuthenticattion.verificarToken, (req, res, next ) =
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
-// REGISTER SERVAL
+// REGISTER
 
 // Get Clientes
 app.get('/cliente/:ruc',mdAuthenticattion.verificarToken, (req, res, next ) => {
@@ -609,9 +609,33 @@ app.get('/cliente/:ruc',mdAuthenticattion.verificarToken, (req, res, next ) => {
         }
     });
 });
-// End Get Denuncia
+// End Get Clientes
 
-// REGISTER SERVAL
+// Get Dia feriado
+app.get('/diasferiado', (req, res, next ) => {
+    // var dia = req.params.dia;
+    // var params = `'${dia}'`; 
+    var lsql = `SELECT * FROM FE_SUPERVAN.DBO.DIAS_FERIADOS`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var diasFeriado = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                diasFeriado
+            });
+        }
+    });
+});
+// End Get Dia feriado
+
+// REGISTER
 ////////////////////////////////////////////////////////////////////////////////
 
 module.exports = app;

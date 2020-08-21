@@ -634,10 +634,22 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         // cellStyle: styles.cellPink, // <- Cell style
         width: 250 // <- width in pixels
       },
+      DS_PRODUCTO: {
+        displayName: 'PRODUCTO',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
+      RAZON_SOCIAL: {
+        displayName: 'CLIENTE',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
     }
     const dataset = guias;
     const merges = [
-      { start: { row: 2, column: 1 }, end: { row: 2, column:  15} }
+      { start: { row: 2, column: 1 }, end: { row: 2, column:  17} }
      
     ]
    
