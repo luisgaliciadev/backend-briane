@@ -60,6 +60,7 @@ app.put('/movilidadcond/:idViatico/:idUser', mdAuthenticattion.verificarToken, (
           var cantConductores = conductores.length;
           var razonSocial = conductores[0].NOMBRE_EMPRESA;
           var ruc = conductores[0].RUC_EMPRESA;
+          var periodo = conductores[0].PERIODO;
           var css = '';
           var contenido = '';
           var nombreDoc = '';
@@ -165,7 +166,8 @@ app.put('/movilidadcond/:idViatico/:idUser', mdAuthenticattion.verificarToken, (
                         } 
                       }                      
                     });
-                    nombreDoc = conductor.ID_VIATICO + '-' + conductor.IDENTIFICACION;
+                    // nombreDoc = conductor.ID_VIATICO + '-' + conductor.IDENTIFICACION;
+                    nombreDoc = conductor.IDENTIFICACION + '-' + conductor.NRO_RECIBO;
                     nroPlanilla = conductor.NRO_RECIBO;
                     css = `
                     .table-dt {
@@ -238,7 +240,7 @@ app.put('/movilidadcond/:idViatico/:idUser', mdAuthenticattion.verificarToken, (
                             </tr>
                             <tr>
                               <td>Periodo:</td>
-                              <td style="border: 1px solid;">07-2020</td>            
+                              <td style="border: 1px solid;">${periodo}</td>            
                             </tr>
                           </table>
                         </div>
@@ -327,7 +329,7 @@ app.put('/movilidadcond/:idViatico/:idUser', mdAuthenticattion.verificarToken, (
                             </tr>
                             <tr>            
                               <td>Revisado por</td>
-                              <td>Autorizado por</td>        
+                              <td>Validado por</td>        
                             </tr>
                           </table>
                         </div>

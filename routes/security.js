@@ -252,6 +252,31 @@ app.get('/modulesroles/:id/:idRol', (req, res, next ) => {
 });
 // End Get All Modules for Roles
 
+// Get All roles modules
+app.get('/rolmodules/:idRol', (req, res, next ) => {
+    var idRol = req.params.idRol;
+    var params = `${idRol}`;
+
+    var lsql = `EXEC GETS_ALL_ROLES_MODULES ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var RolModules = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                RolModules
+            });
+        }
+    });
+});
+// End Get All roles modules
+
 // Get Module
 app.get('/module/:id', (req, res, next ) => {
     var id = req.params.id;

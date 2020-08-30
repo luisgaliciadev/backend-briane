@@ -63,20 +63,20 @@ var config = {
     }
 };
 
-// var configServal = {
-//     user: 'sa',
-//     // driver='tedious',
-//     password: 'Cybersac1',
-//     server: '190.117.103.41',
-//     //port:
-//     database: 'FE_SUPERVAN',
-//     connectionTimeout: 300000,
-//     requestTimeout: 300000,
-//     pool: {
-//         idleTimeoutMillis: 300000,
-//         max: 100
-//     }
-// };
+var configServal = {
+    user: 'sa',
+    // driver='tedious',
+    password: 'Cybersac1',
+    server: '190.117.103.41',
+    //port:
+    database: 'FE_SUPERVAN',
+    connectionTimeout: 300000,
+    requestTimeout: 300000,
+    pool: {
+        idleTimeoutMillis: 300000,
+        max: 100
+    }
+};
 
 // Test connection
 var connection = mssql.connect(config, function(err, res) {
@@ -91,13 +91,13 @@ var connection = mssql.connect(config, function(err, res) {
     }
 });
 
-// var connectionServal = mssql.connect(configServal, function(err, res) {
-//     if (err) {
-//         throw err;
-//     } else {
-//         console.log('Base de datos: ' + configServal.database + '\x1b[32m%s\x1b[0m', ' Online');
-//     }
-// });
+var connectionServal = mssql.connect(configServal, function(err, res) {
+    if (err) {
+        throw err;
+    } else {
+        console.log('Base de datos: ' + configServal.database + '\x1b[32m%s\x1b[0m', ' Online');
+    }
+});
 
 // Routes
 app.use('/api/user', userRoutes);

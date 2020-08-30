@@ -551,6 +551,12 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
     var zona = req.params.zona;
     var idUser = req.params.idUser;
     var body = req.body;
+
+    // return res.status(200).send({
+    //     ok: true,                             
+    //     body
+    // });
+
     var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA, NRO_SEMANA, ANIO,NOMBRE_DIA 
                 FROM VIEW_DIAS WHERE (NRO_SEMANA = ${semana}) AND (ANIO = ${year})`;
     var request = new mssql.Request();
@@ -570,6 +576,7 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
             var cantRegistros = body.length;
             var params =  `${semana}, ${year}, ${zona}, '${fhDesde}', '${fhHasta}', ${cantRegistros}, ${idUser}`;             
             lsql = `EXEC FE_SUPERVAN.DBO.SP_REG_REPORT_PRODUCTIVIDAD ${params}`;  
+            // console.log(lsql);
             var request = new mssql.Request();
             request.query(lsql, (err, result) => {
                 if (err) { 
@@ -581,7 +588,14 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                 } else {
                     var report = result.recordset[0];  
                     var idReportOp = report.ID_REPORT_PRO_OP;
-                    if (report) {                        
+                    if (report) {    
+                        if (report.ID_VIATICO == 0) {
+                            return res.status(400).send({
+                                ok: true,                             
+                                message: report.MESSAGE
+                            });
+                        }
+                                          
                         var diasProdTurno = [];
                         var i = 0;
                         var fecha, turno1, turno2, turno3, motivo1, motivo2, motivo3;
@@ -876,7 +890,334 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
 });
 // En Register report OP
 
-// Update report OP
+
+// Register nuevos viajes report OP
+app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthenticattion.verificarToken, (req, res) => {    
+    var semana = req.params.semana;
+    var year = req.params.year;
+    var zona = req.params.zona;
+    var idUser = req.params.idUser;
+    var idReportOp = req.params.idReportOp;
+    var body = req.body;
+
+    var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA, NRO_SEMANA, ANIO,NOMBRE_DIA 
+                FROM VIEW_DIAS WHERE (NRO_SEMANA = ${semana}) AND (ANIO = ${year})`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+           
+            var dias = result.recordset; 
+            var arrayFhdesde = dias[0].FECHA.split('/');
+            var arrayFhhasta = dias[6].FECHA.split('/');
+            var fhDesde = arrayFhdesde[2] + '-' + arrayFhdesde[1] + '-' + arrayFhdesde[0];
+            var fhHasta = arrayFhhasta[2] + '-' + arrayFhhasta[1] + '-' + arrayFhhasta[0];
+            var cantRegistros = body.length;
+            // var params =  `${semana}, ${year}, ${zona}, '${fhDesde}', '${fhHasta}', ${cantRegistros}, ${idUser}`;
+            
+            var diasProdTurno = [];
+            var i = 0;
+            var fecha, turno1, turno2, turno3, motivo1, motivo2, motivo3;
+            var arrayFecha;
+            body.forEach(function (diasProd) { 
+                i = 0;
+                for (i = 0; i < 7; i++) {
+                    switch(i) {
+                        case 0:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = diasProd.dia1.turno2;
+                                turno3 = diasProd.dia1.turno3;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = diasProd.dia1.motivo2;
+                                motivo3 = diasProd.dia1.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = diasProd.dia1.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = diasProd.dia1.motivo2;
+                                motivo3 = 0;
+                            }                            
+                        break;  
+                        case 1:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = diasProd.dia2.turno2;
+                                turno3 = diasProd.dia2.turno3;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = diasProd.dia2.motivo2;
+                                motivo3 = diasProd.dia2.motivo3;
+                            }                            
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = diasProd.dia2.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = diasProd.dia2.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;                              
+                        case 2:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = diasProd.dia3.turno2;
+                                turno3 = diasProd.dia3.turno3;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = diasProd.dia3.motivo2;
+                                motivo3 = diasProd.dia3.motivo3;
+                            }                                
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = diasProd.dia3.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = diasProd.dia3.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                        case 3:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = diasProd.dia4.turno2;
+                                turno3 = diasProd.dia4.turno3;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = diasProd.dia4.motivo2;
+                                motivo3 = diasProd.dia4.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = diasProd.dia4.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = diasProd.dia4.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                        case 4:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = diasProd.dia5.turno2;
+                                turno3 = diasProd.dia5.turno3;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = diasProd.dia5.motivo2;
+                                motivo3 = diasProd.dia5.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = diasProd.dia5.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = diasProd.dia5.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;                            
+                        case 5:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = diasProd.dia6.turno2;
+                                turno3 = diasProd.dia6.turno3;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = diasProd.dia6.motivo2;
+                                motivo3 = diasProd.dia6.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = diasProd.dia6.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = diasProd.dia6.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                        case 6:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = diasProd.dia7.turno2;
+                                turno3 = diasProd.dia7.turno3;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = diasProd.dia7.motivo2;
+                                motivo3 = diasProd.dia7.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = diasProd.dia7.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = diasProd.dia7.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                    }
+                    diasProdTurno.push({
+                        ID_CONDUCTOR: diasProd.ID_CONDUCTOR2,
+                        ID_TRACTO: diasProd.ID_TRACTO,
+                        ANIO: diasProd.ANIO,
+                        NRO_SEMANA: diasProd.NRO_SEMANA,
+                        ID_ZONA : zona,
+                        FECHA: fecha,
+                        TURNO1: turno1,
+                        TURNO2: turno2,
+                        TURNO3: turno3,
+                        MOTIVO1: motivo1,
+                        MOTIVO2: motivo2,
+                        MOTIVO3: motivo3,
+                        ID_REPORT_PRO_OP: idReportOp
+                    });
+                }
+            });
+            var params = [];
+            diasProdTurno.forEach(function (diasProd) {
+                var idConductor = diasProd.ID_CONDUCTOR;
+                var idTracto = diasProd.ID_TRACTO;
+                var anio = diasProd.ANIO;
+                var nroSemana = diasProd.NRO_SEMANA;
+                var fecha = diasProd.FECHA;
+                var turno1 = diasProd.TURNO1;
+                var turno2 = diasProd.TURNO2;
+                var turno3 = diasProd.TURNO3;
+                var motivo1 = diasProd.MOTIVO1;
+                var motivo2 = diasProd.MOTIVO2;
+                var motivo3 = diasProd.MOTIVO3;    
+                var idZona = diasProd.ID_ZONA;
+                var idReport = diasProd.ID_REPORT_PRO_OP;
+                params = params + ',' + '\n' + `(${idConductor}, ${idTracto} , ${anio}, ${nroSemana}, '${fecha}', ${turno1}, ${turno2}, ${turno3}, ${motivo1}, ${motivo2}, ${motivo3}, ${idZona}, ${idReport}, ${idUser})`;
+            });
+            params = params.substring(1);
+            var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_REPORT_PRODUCTIVIDAD (ID_CONDUCTOR,ID_TRACTO,ANIO,NRO_SEMANA,FECHA,TURNO1,TURNO2,TURNO3,MOTIVO1,MOTIVO2,MOTIVO3,ID_ZONA,ID_REPORT_PRO_OP,ID_USUARIO_BS) 
+            VALUES ${params}`;
+            // console.log(lsql);
+            // return res.status(200).send({
+            //     ok: true,                             
+            //     body
+            // });
+            var request = new mssql.Request();
+            request.query(lsql, (err, result) => {
+                if (err) {                       
+                    return res.status(500).send({
+                        ok: false,
+                        message: 'Error en la petición.',
+                        error: err
+                    });
+                } else {
+                    var reportOp = result.rowsAffected[0];
+                    return res.status(200).send({
+                        ok: true,                             
+                        reportOp,
+                        body
+                    });
+                }
+            });     
+        }
+    });    
+});
+// End Register nuevos viajes report OP
+
+// Update deta report OP
 app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.verificarToken, (req, res) => {
     var semana = req.params.semana;
     var year = req.params.year;
@@ -1146,12 +1487,707 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
             var detaProductividad = result.recordset;
             return res.status(200).send({
                 ok: true,
-                detaProductividad
+                detaProductividad,
+                params
             });
         }
     });                      
 });
-// End Update report OP
+// End Update deta report OP
+
+
+// Delete deta report OP
+app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.verificarToken, (req, res) => {
+    var semana = req.params.semana;
+    var year = req.params.year;
+    var zona = req.params.zona;
+    var idReportOp = req.params.id;
+    var idUser = req.params.idUser;
+    var i = parseInt(req.params.nroDia);
+    var body = req.body;
+    var diasProdTurno = [];
+    var fecha, turno1, turno2, turno3, motivo1, motivo2, motivo3;
+    var arrayFecha;
+    var diasProd = [];
+    diasProd = body;    
+    switch(i) {
+        case 0:
+            if (zona == 1) {
+                arrayFecha = diasProd.dia1.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia1.turno1;
+                turno2 = diasProd.dia1.turno2;
+                turno3 = diasProd.dia1.turno3;
+                motivo1 = diasProd.dia1.motivo1;
+                motivo2 = diasProd.dia1.motivo2;
+                motivo3 = diasProd.dia1.motivo3;
+            }
+            if (zona == 2) {
+                arrayFecha = diasProd.dia1.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia1.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia1.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }
+            if (zona == 3) {
+                arrayFecha = diasProd.dia1.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia1.turno1;
+                turno2 = diasProd.dia1.turno2;
+                turno3 = 0;
+                motivo1 = diasProd.dia1.motivo1;
+                motivo2 = diasProd.dia1.motivo2;
+                motivo3 = 0;
+            }                            
+        break;  
+        case 1:
+            if (zona == 1) {
+                arrayFecha = diasProd.dia2.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia2.turno1;
+                turno2 = diasProd.dia2.turno2;
+                turno3 = diasProd.dia2.turno3;
+                motivo1 = diasProd.dia2.motivo1;
+                motivo2 = diasProd.dia2.motivo2;
+                motivo3 = diasProd.dia2.motivo3;
+            }                            
+            if (zona == 2) {
+                arrayFecha = diasProd.dia2.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia2.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia2.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
+            if (zona == 3) {
+                arrayFecha = diasProd.dia2.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia2.turno1;
+                turno2 = diasProd.dia2.turno2;
+                turno3 = 0;
+                motivo1 = diasProd.dia2.motivo1;
+                motivo2 = diasProd.dia2.motivo2;
+                motivo3 = 0;
+            }
+        break;                              
+        case 2:
+            if (zona == 1) {
+                arrayFecha = diasProd.dia3.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia3.turno1;
+                turno2 = diasProd.dia3.turno2;
+                turno3 = diasProd.dia3.turno3;
+                motivo1 = diasProd.dia3.motivo1;
+                motivo2 = diasProd.dia3.motivo2;
+                motivo3 = diasProd.dia3.motivo3;
+            }                                
+            if (zona == 2) {
+                arrayFecha = diasProd.dia3.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia3.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia3.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
+            if (zona == 3) {
+                arrayFecha = diasProd.dia3.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia3.turno1;
+                turno2 = diasProd.dia3.turno2;
+                turno3 = 0;
+                motivo1 = diasProd.dia3.motivo1;
+                motivo2 = diasProd.dia3.motivo2;
+                motivo3 = 0;
+            }
+        break;
+        case 3:
+            if (zona == 1) {
+                arrayFecha = diasProd.dia4.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia4.turno1;
+                turno2 = diasProd.dia4.turno2;
+                turno3 = diasProd.dia4.turno3;
+                motivo1 = diasProd.dia4.motivo1;
+                motivo2 = diasProd.dia4.motivo2;
+                motivo3 = diasProd.dia4.motivo3;
+            }
+            if (zona == 2) {
+                arrayFecha = diasProd.dia4.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia4.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia4.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
+            if (zona == 3) {
+                arrayFecha = diasProd.dia4.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia4.turno1;
+                turno2 = diasProd.dia4.turno2;
+                turno3 = 0;
+                motivo1 = diasProd.dia4.motivo1;
+                motivo2 = diasProd.dia4.motivo2;
+                motivo3 = 0;
+            }
+        break;
+        case 4:
+            if (zona == 1) {
+                arrayFecha = diasProd.dia5.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia5.turno1;
+                turno2 = diasProd.dia5.turno2;
+                turno3 = diasProd.dia5.turno3;
+                motivo1 = diasProd.dia5.motivo1;
+                motivo2 = diasProd.dia5.motivo2;
+                motivo3 = diasProd.dia5.motivo3;
+            }
+            if (zona == 2) {
+                arrayFecha = diasProd.dia5.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia5.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia5.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
+            if (zona == 3) {
+                arrayFecha = diasProd.dia5.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia5.turno1;
+                turno2 = diasProd.dia5.turno2;
+                turno3 = 0;
+                motivo1 = diasProd.dia5.motivo1;
+                motivo2 = diasProd.dia5.motivo2;
+                motivo3 = 0;
+            }
+        break;                            
+        case 5:
+            if (zona == 1) {
+                arrayFecha = diasProd.dia6.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia6.turno1;
+                turno2 = diasProd.dia6.turno2;
+                turno3 = diasProd.dia6.turno3;
+                motivo1 = diasProd.dia6.motivo1;
+                motivo2 = diasProd.dia6.motivo2;
+                motivo3 = diasProd.dia6.motivo3;
+            }
+            if (zona == 2) {
+                arrayFecha = diasProd.dia6.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia6.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia6.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
+            if (zona == 3) {
+                arrayFecha = diasProd.dia6.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia6.turno1;
+                turno2 = diasProd.dia6.turno2;
+                turno3 = 0;
+                motivo1 = diasProd.dia6.motivo1;
+                motivo2 = diasProd.dia6.motivo2;
+                motivo3 = 0;
+            }
+        break;
+        case 6:
+            if (zona == 1) {
+                arrayFecha = diasProd.dia7.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia7.turno1;
+                turno2 = diasProd.dia7.turno2;
+                turno3 = diasProd.dia7.turno3;
+                motivo1 = diasProd.dia7.motivo1;
+                motivo2 = diasProd.dia7.motivo2;
+                motivo3 = diasProd.dia7.motivo3;
+            }
+            if (zona == 2) {
+                arrayFecha = diasProd.dia7.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia7.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia7.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
+            if (zona == 3) {
+                arrayFecha = diasProd.dia7.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia7.turno1;
+                turno2 = diasProd.dia7.turno2;
+                turno3 = 0;
+                motivo1 = diasProd.dia7.motivo1;
+                motivo2 = diasProd.dia7.motivo2;
+                motivo3 = 0;
+            }
+        break;
+    }
+    diasProdTurno.push({
+        ID_CONDUCTOR: diasProd.ID_CONDUCTOR,
+        ID_TRACTO: diasProd.ID_VEHICULO,
+        ANIO: diasProd.ANIO,
+        NRO_SEMANA: diasProd.NRO_SEMANA,
+        ID_ZONA : zona,
+        FECHA: fecha,
+        TURNO1: turno1,
+        TURNO2: turno2,
+        TURNO3: turno3,
+        MOTIVO1: motivo1,
+        MOTIVO2: motivo2,
+        MOTIVO3: motivo3,
+        ID_REPORT_PRO_OP: idReportOp
+    });
+    diasProdTurno = diasProdTurno[0];
+    var params = `${diasProdTurno.ID_CONDUCTOR},${diasProdTurno.ID_TRACTO},${diasProdTurno.ANIO},${diasProdTurno.NRO_SEMANA},'${diasProdTurno.FECHA}',${diasProdTurno.TURNO1},${diasProdTurno.TURNO2},${diasProdTurno.TURNO3}, ${diasProdTurno.MOTIVO1}, ${diasProdTurno.MOTIVO2}, ${diasProdTurno.MOTIVO3}, ${diasProdTurno.ID_ZONA}, ${diasProdTurno.ID_REPORT_PRO_OP}, ${idUser}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_OP_DETA_REPORT_PRODUCTIVIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaProductividad = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                detaProductividad,
+                params
+            });
+        }
+    });                      
+});
+// End Delete deta report OP
+
+
+// Update deta report pro nuevos
+app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattion.verificarToken, (req, res) => {    
+    var semana = req.params.semana;
+    var year = req.params.year;
+    var zona = req.params.zona;
+    var idUser = req.params.idUser;
+    var idReportOp = req.params.idReportOp;
+    var body = req.body;
+
+    // return res.status(200).send({
+    //     ok: true,  
+    //     body                          
+    // });
+
+    var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA, NRO_SEMANA, ANIO,NOMBRE_DIA 
+                FROM VIEW_DIAS WHERE (NRO_SEMANA = ${semana}) AND (ANIO = ${year})`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+           
+            var dias = result.recordset; 
+            var arrayFhdesde = dias[0].FECHA.split('/');
+            var arrayFhhasta = dias[6].FECHA.split('/');
+            var fhDesde = arrayFhdesde[2] + '-' + arrayFhdesde[1] + '-' + arrayFhdesde[0];
+            var fhHasta = arrayFhhasta[2] + '-' + arrayFhhasta[1] + '-' + arrayFhhasta[0];
+            var cantRegistros = body.length;
+            // var params =  `${semana}, ${year}, ${zona}, '${fhDesde}', '${fhHasta}', ${cantRegistros}, ${idUser}`;
+            
+            var diasProdTurno = [];
+            var i = 0;
+            var fecha, turno1, turno2, turno3, motivo1, motivo2, motivo3;
+            var arrayFecha;
+            body.forEach(function (diasProd) { 
+                i = 0;
+                for (i = 0; i < 7; i++) {
+                    switch(i) {
+                        case 0:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = diasProd.dia1.turno2;
+                                turno3 = diasProd.dia1.turno3;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = diasProd.dia1.motivo2;
+                                motivo3 = diasProd.dia1.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = diasProd.dia1.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = diasProd.dia1.motivo2;
+                                motivo3 = 0;
+                            }                            
+                        break;  
+                        case 1:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = diasProd.dia2.turno2;
+                                turno3 = diasProd.dia2.turno3;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = diasProd.dia2.motivo2;
+                                motivo3 = diasProd.dia2.motivo3;
+                            }                            
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = diasProd.dia2.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = diasProd.dia2.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;                              
+                        case 2:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = diasProd.dia3.turno2;
+                                turno3 = diasProd.dia3.turno3;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = diasProd.dia3.motivo2;
+                                motivo3 = diasProd.dia3.motivo3;
+                            }                                
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = diasProd.dia3.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = diasProd.dia3.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                        case 3:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = diasProd.dia4.turno2;
+                                turno3 = diasProd.dia4.turno3;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = diasProd.dia4.motivo2;
+                                motivo3 = diasProd.dia4.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = diasProd.dia4.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = diasProd.dia4.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                        case 4:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = diasProd.dia5.turno2;
+                                turno3 = diasProd.dia5.turno3;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = diasProd.dia5.motivo2;
+                                motivo3 = diasProd.dia5.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = diasProd.dia5.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = diasProd.dia5.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;                            
+                        case 5:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = diasProd.dia6.turno2;
+                                turno3 = diasProd.dia6.turno3;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = diasProd.dia6.motivo2;
+                                motivo3 = diasProd.dia6.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = diasProd.dia6.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = diasProd.dia6.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                        case 6:
+                            if (zona == 1) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = diasProd.dia7.turno2;
+                                turno3 = diasProd.dia7.turno3;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = diasProd.dia7.motivo2;
+                                motivo3 = diasProd.dia7.motivo3;
+                            }
+                            if (zona == 2) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
+                            if (zona == 3) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = diasProd.dia7.turno2;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = diasProd.dia7.motivo2;
+                                motivo3 = 0;
+                            }
+                        break;
+                    }
+                    diasProdTurno.push({
+                        ID_CONDUCTOR: diasProd.ID_CONDUCTOR,
+                        ID_TRACTO: diasProd.ID_VEHICULO,
+                        ANIO: diasProd.ANIO,
+                        NRO_SEMANA: diasProd.NRO_SEMANA,
+                        ID_ZONA : zona,
+                        FECHA: fecha,
+                        TURNO1: turno1,
+                        TURNO2: turno2,
+                        TURNO3: turno3,
+                        MOTIVO1: motivo1,
+                        MOTIVO2: motivo2,
+                        MOTIVO3: motivo3,
+                        ID_REPORT_PRO_OP: idReportOp
+                    });
+                }
+            });
+           
+            var params ='';
+            diasProdTurno.forEach(function (diasProd) {
+                var idConductor = diasProd.ID_CONDUCTOR;
+                var idTracto = diasProd.ID_TRACTO;
+                var anio = diasProd.ANIO;
+                var nroSemana = diasProd.NRO_SEMANA;
+                var fecha = diasProd.FECHA;
+                var turno1 = diasProd.TURNO1;
+                var turno2 = diasProd.TURNO2;
+                var turno3 = diasProd.TURNO3;
+                var motivo1 = diasProd.MOTIVO1;
+                var motivo2 = diasProd.MOTIVO2;
+                var motivo3 = diasProd.MOTIVO3;    
+                var idZona = diasProd.ID_ZONA;
+                var idReport = diasProd.ID_REPORT_PRO_OP;
+                // params = `${idConductor}, ${idTracto} , ${anio}, ${nroSemana}, '${fecha}', ${turno1}, ${turno2}, ${turno3}, ${motivo1}, ${motivo2}, ${motivo3}, ${idZona}, ${idReport}, ${idUser}`;
+                params = params  + '\n' + `EXEC FE_SUPERVAN.DBO.SP_UPDATE_OP_DETA_REPORT_PRODUCTIVIDAD_NUEVOS ${idConductor}, ${idTracto} , ${anio}, ${nroSemana}, '${fecha}', ${turno1}, ${turno2}, ${turno3}, ${motivo1}, ${motivo2}, ${motivo3}, ${idZona}, ${idReport}, ${idUser}`;
+                // actualizarDetareportOp(params)
+            });
+            var lsql = `${params}
+            SELECT ${cantRegistros} as registrosAct`;
+            // console.log(lsql);
+            // return res.status(200).send({
+            //     ok: true,                             
+            //     cantRegistros
+            // });
+            var request = new mssql.Request();
+            request.query(lsql, (err, result) => {
+                if (err) { 
+                    return res.status(500).send({
+                        ok: false,
+                        message: 'Error en la petición.',
+                        error: err
+                    });
+                } else {
+                    var updateDeta = result.recordset[0];  
+                    return res.status(200).send({
+                        ok: true,                             
+                        cantRegistros,
+                        updateDeta
+                    });
+                }
+            });     
+            // return res.status(200).send({
+            //     ok: true,                             
+            //     cantRegistros
+            // });
+        }
+    });    
+});
+// End Update deta report pro nuevos
+
+// function actualizarDetareportOp(params) {
+//     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_OP_DETA_REPORT_PRODUCTIVIDAD ${params}`;
+//     var request = new mssql.Request();
+//     request.query(lsql, (err, result) => {
+//         if (err) { 
+//             console.log(err)
+//         } else {
+//             // console.log(result)
+//         }
+//     });       
+
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Aprobar Reporte OP
+app.put('/aprobarrepportop/:id/:user/:idZona', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var id = req.params.id;
+    var user = req.params.user;
+    var idZona = req.params.idZona;
+    var params =  `${id}, ${user}, ${idZona} `;
+    var lsql = `FE_SUPERVAN.DBO.SP_APROBAR_REPORTE_PROD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var reporteProOp = result.recordset[0];
+            if(!reporteProOp) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existen registros para anular.'
+                });
+            }
+            if(reporteProOp.MESSAGE) {
+                return res.status(400).send({
+                    ok: true,
+                    message: reporteProOp.MESSAGE
+                });
+            }      
+            return res.status(200).send({
+                ok: true,
+                reporteProOp
+            });
+        }
+    });  
+});
+// End Aprobar Reporte OP
 
 // Delete Report OP
 app.delete('/reportop/:id/:user', mdAuthenticattion.verificarToken, (req, res, next ) => {       
@@ -1190,7 +2226,7 @@ app.delete('/reportop/:id/:user', mdAuthenticattion.verificarToken, (req, res, n
 });
 // End Delete Report OP
 
-// Get Get report productividad
+// Get Get deta report productividad
 app.get('/detareportprodop/:semana/:year/:id',mdAuthenticattion.verificarToken, (req, res, next ) => {
     var semana = req.params.semana;
     var year = req.params.year;
@@ -1430,7 +2466,7 @@ app.get('/detareportprodop/:semana/:year/:id',mdAuthenticattion.verificarToken, 
         }
     });
 });
-// End Get report productividad
+// End Get deta report productividad
 
 // Get reports productividad
 app.get('/reportspro/:desde/:hasta/:search',mdAuthenticattion.verificarToken, (req, res, next ) => {       
@@ -1476,7 +2512,7 @@ app.get('/reportprodop/:id', mdAuthenticattion.verificarToken, (req, res, next )
             if(!reportProOp) {
                 return res.status(400).send({
                     ok: true,
-                    message: 'No existe el registro de viaticos'
+                    message: 'No existe el registro.'
                 });
             }          
             return res.status(200).send({

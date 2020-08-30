@@ -295,7 +295,7 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                         i++;
                         j = -1;                         
                         body.forEach(function (viatico) {
-                            var turno1, turno2, turno3, check1 , check2, check3;
+                            var turno1, turno2, turno3, check1 , check2, check3, fgViaje1, fgViaje2, fgViaje3;
                             if (i==1) {    
                                 turno1 = viatico.dia1.turno1;
                                 turno2 = viatico.dia1.turno2;
@@ -303,6 +303,10 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 check1 = viatico.dia1.check1;
                                 check2 = viatico.dia1.check2;
                                 check3 = viatico.dia1.check3;
+                                fgViaje1 = viatico.dia1.fgViaje1;
+                                fgViaje2 = viatico.dia1.fgViaje2;
+                                fgViaje3 = viatico.dia1.fgViaje3;
+
                             }
                             if (i==2) {    
                                 turno1 = viatico.dia2.turno1;
@@ -311,6 +315,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 check1 = viatico.dia2.check1;
                                 check2 = viatico.dia2.check2;
                                 check3 = viatico.dia2.check3;
+                                fgViaje1 = viatico.dia2.fgViaje1;
+                                fgViaje2 = viatico.dia2.fgViaje2;
+                                fgViaje3 = viatico.dia2.fgViaje3;
                             }
                             if (i==3) {    
                                 turno1 = viatico.dia3.turno1;
@@ -319,6 +326,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 check1 = viatico.dia3.check1;
                                 check2 = viatico.dia3.check2;
                                 check3 = viatico.dia3.check3;
+                                fgViaje1 = viatico.dia3.fgViaje1;
+                                fgViaje2 = viatico.dia3.fgViaje2;
+                                fgViaje3 = viatico.dia3.fgViaje3;
                             }
                             if (i==4) {    
                                 turno1 = viatico.dia4.turno1;
@@ -327,6 +337,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 check1 = viatico.dia4.check1;
                                 check2 = viatico.dia4.check2;
                                 check3 = viatico.dia4.check3;
+                                fgViaje1 = viatico.dia4.fgViaje1;
+                                fgViaje2 = viatico.dia4.fgViaje2;
+                                fgViaje3 = viatico.dia4.fgViaje3;
                             }
                             if (i==5) {    
                                 turno1 = viatico.dia5.turno1;
@@ -335,6 +348,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 check1 = viatico.dia5.check1;
                                 check2 = viatico.dia5.check2;
                                 check3 = viatico.dia5.check3;
+                                fgViaje1 = viatico.dia5.fgViaje1;
+                                fgViaje2 = viatico.dia5.fgViaje2;
+                                fgViaje3 = viatico.dia5.fgViaje3;
                             }
                             if (i==6) {    
                                 turno1 = viatico.dia6.turno1;
@@ -343,6 +359,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 check1 = viatico.dia6.check1;
                                 check2 = viatico.dia6.check2;
                                 check3 = viatico.dia6.check3;
+                                fgViaje1 = viatico.dia6.fgViaje1;
+                                fgViaje2 = viatico.dia6.fgViaje2;
+                                fgViaje3 = viatico.dia6.fgViaje3;
                             }
                             if (i==7) {    
                                 turno1 = viatico.dia7.turno1;
@@ -351,6 +370,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 check1 = viatico.dia7.check1;
                                 check2 = viatico.dia7.check2;
                                 check3 = viatico.dia7.check3;
+                                fgViaje1 = viatico.dia7.fgViaje1;
+                                fgViaje2 = viatico.dia7.fgViaje2;
+                                fgViaje3 = viatico.dia7.fgViaje3;
                             }                                
                             viaticos.push({
                                 ID_VIATICO: 0,
@@ -362,6 +384,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 CHECK1: check1,
                                 CHECK2: check2,
                                 CHECK3: check3,
+                                FG_VIAJE1: fgViaje1,
+                                FG_VIAJE2: fgViaje2,
+                                FG_VIAJE3: fgViaje3,
                                 REINTEGRO: viatico.REINTEGRO,   
                                 TOTAL: viatico.TOTAL                             
                             });
@@ -379,6 +404,9 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                         var check1 = viatico.CHECK1;
                         var check2 = viatico.CHECK2;
                         var check3 = viatico.CHECK3;
+                        var fgViaje1 = viatico.FG_VIAJE1;
+                        var fgViaje2 = viatico.FG_VIAJE2;
+                        var fgViaje3 = viatico.FG_VIAJE3;
                         var reintegro = viatico.REINTEGRO;
                         var total = viatico.TOTAL;
                         if (check1) {
@@ -396,11 +424,11 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                         } else {
                             check3 = 0;
                         }
-                        params = params + ',' + '\n' + `(${idViatico}, ${idConductor} , '${fecha}', ${turno1}, ${turno2}, ${turno3}, ${check1}, ${check2}, ${check3},${reintegro}, ${total}, ${idUser})`;
+                        params = params + ',' + '\n' + `(${idViatico}, ${idConductor} , '${fecha}', ${turno1}, ${turno2}, ${turno3}, ${check1}, ${check2}, ${check3},${reintegro}, ${total}, ${idUser}, ${fgViaje1}, ${fgViaje2}, ${fgViaje3})`;
                     });
 
                     params = params.substring(1);
-                    var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_VIATICOS_CONDUCTOR (ID_VIATICO,ID_CONDUCTOR,FECHA,TURNO1,TURNO2,TURNO3,CHECK1,CHECK2,CHECK3,REINTEGRO,TOTAL,ID_USUARIO_BS) 
+                    var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_VIATICOS_CONDUCTOR (ID_VIATICO,ID_CONDUCTOR,FECHA,TURNO1,TURNO2,TURNO3,CHECK1,CHECK2,CHECK3,REINTEGRO,TOTAL,ID_USUARIO_BS,FG_VIAJE1,FG_VIAJE2,FG_VIAJE3) 
                     VALUES ${params}`;
                     var request = new mssql.Request();
                     request.query(lsql, (err, result) => {
@@ -631,7 +659,7 @@ app.get('/viatico/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
             if(!viatico) {
                 return res.status(400).send({
                     ok: true,
-                    message: 'No existe el registro de viaticos'
+                    message: 'No existe el registro de viáticos'
                 });
             }          
             return res.status(200).send({
@@ -777,14 +805,20 @@ app.get('/detaviaticos/:semana/:year/:id/:idConductor', mdAuthenticattion.verifi
                                         var turno3 = 0; 
                                         var check1 = false; 
                                         var check2= false;
-                                        var check3 = false;                                    
+                                        var check3 = false; 
+                                        var fgViaje1 = 0; 
+                                        var fgViaje2 = 0; 
+                                        var fgViaje3 = 0;                                  
                                         if (resultado) {
                                             turno1 = resultado.TURNO1;
                                             turno2 = resultado.TURNO2;
                                             turno3 = resultado.TURNO3; 
                                             check1 = resultado.CHECK1; 
                                             check2 = resultado.CHECK2;
-                                            check3 = resultado.CHECK3;                                        
+                                            check3 = resultado.CHECK3;
+                                            fgViaje1 = resultado.FG_VIAJE1; 
+                                            fgViaje2 = resultado.FG_VIAJE2;
+                                            fgViaje3 = resultado.FG_VIAJE3;                                        
                                             turnos = {
                                                 fecha: dia.FECHA,
                                                 turno1,
@@ -792,7 +826,10 @@ app.get('/detaviaticos/:semana/:year/:id/:idConductor', mdAuthenticattion.verifi
                                                 turno3,
                                                 check1,
                                                 check2,
-                                                check3                                                    
+                                                check3,
+                                                fgViaje1,
+                                                fgViaje2,
+                                                fgViaje3                                                    
                                             };
                                         } else {
                                             turnos = {
@@ -802,7 +839,10 @@ app.get('/detaviaticos/:semana/:year/:id/:idConductor', mdAuthenticattion.verifi
                                                 turno3: 0,
                                                 check1: false,
                                                 check2: false,
-                                                check3: false                                                    
+                                                check3: false,
+                                                fgViaje1,
+                                                fgViaje2,
+                                                fgViaje3                                                    
                                             };
                                         }
                                         if (i==0) {                                           
@@ -906,14 +946,49 @@ app.get('/productividad/:semana/:year/:zona', mdAuthenticattion.verificarToken, 
                                         var turno3 = 0; 
                                         var check1 = false; 
                                         var check2= false;
-                                        var check3 = false;                                       
+                                        var check3 = false;
+                                        var fgViaje1 = false; 
+                                        var fgViaje2 = false;
+                                        var fgViaje3 = false;                                         
                                         if (resultado) {
                                             turno1 = resultado.TURNO1;
                                             turno2 = resultado.TURNO2;
-                                            turno3 = resultado.TURNO3; 
-                                            check1 = resultado.CHECK1; 
-                                            check2 = resultado.CHECK2;
-                                            check3 = resultado.CHECK3;                                          
+                                            turno3 = resultado.TURNO3;
+
+                                            fgViaje1 = resultado.FG_VIAJE1;
+                                            fgViaje2 = resultado.FG_VIAJE2;
+                                            fgViaje3 = resultado.FG_VIAJE3;
+                                            
+                                            if(fgViaje1 == 1) {
+                                                check1 = 1;
+                                            } else {
+                                                check1 = resultado.CHECK1; 
+                                            }
+
+                                            if(fgViaje2 == 1) {
+                                                check2 = 1;
+                                            } else {
+                                                check2 = resultado.CHECK2; 
+                                            }
+
+                                            if(fgViaje3 == 1) {
+                                                check3 = 1;
+                                            } else {
+                                                check3 = resultado.CHECK3; 
+                                            }
+
+                                            if(resultado.CHECK1 == 1) {
+                                                fgViaje1 = 1
+                                            }
+
+                                            if(resultado.CHECK2 == 1) {
+                                                fgViaje2 = 1
+                                            }
+
+                                            if(resultado.CHECK3 == 1) {
+                                                fgViaje3 = 1
+                                            }
+         
                                             turnos = {
                                                 fecha: dia.FECHA,
                                                 turno1,
@@ -921,7 +996,10 @@ app.get('/productividad/:semana/:year/:zona', mdAuthenticattion.verificarToken, 
                                                 turno3,
                                                 check1,
                                                 check2,
-                                                check3                                                    
+                                                check3,
+                                                fgViaje1,
+                                                fgViaje2,
+                                                fgViaje3                                                    
                                             };
                                         } else {
                                             turnos = {
@@ -929,9 +1007,12 @@ app.get('/productividad/:semana/:year/:zona', mdAuthenticattion.verificarToken, 
                                                 turno1: 0,
                                                 turno2: 0,
                                                 turno3: 0,
-                                                check1: false,
-                                                check2: false,
-                                                check3: false                                                    
+                                                check1,
+                                                check2,
+                                                check3,
+                                                fgViaje1,
+                                                fgViaje2,
+                                                fgViaje3                                                      
                                             };
                                         }
                                         if (i==0) {                                           
@@ -960,7 +1041,8 @@ app.get('/productividad/:semana/:year/:zona', mdAuthenticattion.verificarToken, 
                                     });
                                 });
                                 return res.status(200).send({
-                                    ok: true,                            
+                                    ok: true,         
+                                    // diasTurnoProductividad,                   
                                     idZona: zona,
                                     dias,
                                     diasProductividad: diasProductividad
@@ -979,6 +1061,30 @@ app.get('/productividad/:semana/:year/:zona', mdAuthenticattion.verificarToken, 
     });
 });
 // End Get productividad
+
+// Get resumen viaticos
+app.get('/resumenviaticos/:id',mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idViatico = req.params.id;
+    var params =  `${idViatico}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_PLANILLA_VIATICOS_RESUMEN ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viaticosResumen = result.recordset;            
+            return res.status(200).send({
+                ok: true,
+                viaticosResumen
+            });
+        }
+    });  
+});
+// End Get resumen viaticos
 
 module.exports = app;
 
