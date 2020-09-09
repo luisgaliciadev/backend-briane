@@ -1086,6 +1086,59 @@ app.get('/resumenviaticos/:id',mdAuthenticattion.verificarToken, (req, res, next
 });
 // End Get resumen viaticos
 
+// Get resumen viaticos por conductor
+app.get('/resumenviaticosporconductor/:idConductor/:desde/:hasta',mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idConductor = req.params.idConductor;
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var params =  `'${idConductor}', '${desde}', '${hasta}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_VIEW_OP_PLANILLA_VIATICO_POR_CONDUCTOR ${params}`;
+    // console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viaticosResumen = result.recordset;            
+            return res.status(200).send({
+                ok: true,
+                viaticosResumen
+            });
+        }
+    });  
+});
+// End Get resumen viaticos por conductor
+
+// Get resumen viaticos por conductor
+app.get('/detaviaticoporconductor/:idViatico/:idConductor',mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idViatico = req.params.idViatico;
+    var idConductor = req.params.idConductor;
+    var params =  `${idViatico}, '${idConductor}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_DETA_VIATICO_POR_CONDUCTOR ${params}`;
+    // console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detalleViatico = result.recordset;            
+            return res.status(200).send({
+                ok: true,
+                detalleViatico
+            });
+        }
+    });  
+});
+// End Get resumen viaticos por conductor
+
 module.exports = app;
 
 

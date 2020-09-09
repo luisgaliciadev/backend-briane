@@ -1205,6 +1205,7 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                     });
                 } else {
                     var reportOp = result.rowsAffected[0];
+                    // updateCantRegReportOp(idReportOp, idUser);
                     return res.status(200).send({
                         ok: true,                             
                         reportOp,
@@ -1216,6 +1217,22 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
     });    
 });
 // End Register nuevos viajes report OP
+
+// Actualizar cantidad de registros report OP
+function updateCantRegReportOp(idReportOp, idUser) {
+    var params = `${idReportOp}, ${idUser}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_CANT_REG_REPORT_OP ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            console.log(err)
+        } else {
+            // console.log(result)
+        }
+    });      
+}
+// fin Actualizar cantidad de registros report OP
+
 
 // Update deta report OP
 app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.verificarToken, (req, res) => {
@@ -1494,7 +1511,6 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
     });                      
 });
 // End Update deta report OP
-
 
 // Delete deta report OP
 app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.verificarToken, (req, res) => {
@@ -2111,45 +2127,6 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
     });    
 });
 // End Update deta report pro nuevos
-
-// function actualizarDetareportOp(params) {
-//     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_OP_DETA_REPORT_PRODUCTIVIDAD ${params}`;
-//     var request = new mssql.Request();
-//     request.query(lsql, (err, result) => {
-//         if (err) { 
-//             console.log(err)
-//         } else {
-//             // console.log(result)
-//         }
-//     });       
-
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Aprobar Reporte OP
 app.put('/aprobarrepportop/:id/:user/:idZona', mdAuthenticattion.verificarToken, (req, res, next ) => {       
