@@ -646,6 +646,12 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         // cellStyle: styles.cellPink, // <- Cell style
         width: 250 // <- width in pixels
       },
+      USUARIO_BS: {
+        displayName: 'COORDINADOR',
+        headerStyle: styles.header,
+        // cellStyle: styles.cellPink, // <- Cell style
+        width: 250 // <- width in pixels
+      },
     }
     const dataset = guias;
     const merges = [

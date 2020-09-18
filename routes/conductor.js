@@ -959,19 +959,19 @@ app.get('/productividad/:semana/:year/:zona', mdAuthenticattion.verificarToken, 
                                             fgViaje2 = resultado.FG_VIAJE2;
                                             fgViaje3 = resultado.FG_VIAJE3;
                                             
-                                            if(fgViaje1 == 1) {
+                                            if(fgViaje1 > 0) {
                                                 check1 = 1;
                                             } else {
                                                 check1 = resultado.CHECK1; 
                                             }
 
-                                            if(fgViaje2 == 1) {
+                                            if(fgViaje2 > 0) {
                                                 check2 = 1;
                                             } else {
                                                 check2 = resultado.CHECK2; 
                                             }
 
-                                            if(fgViaje3 == 1) {
+                                            if(fgViaje3 > 0) {
                                                 check3 = 1;
                                             } else {
                                                 check3 = resultado.CHECK3; 
@@ -1139,6 +1139,83 @@ app.get('/detaviaticoporconductor/:idViatico/:idConductor',mdAuthenticattion.ver
 });
 // End Get resumen viaticos por conductor
 
+
+// Register peaje
+app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var body = req.body;
+    var peaje = body.peaje;
+    var detaPeaje = body.detaPeaje;
+
+    var params =  `${peaje.ID_ORDEN_SERVICIO},${peaje.CANT_REGISTROS},${peaje.MONTO_TOTAL},${peaje.ID_USUARIO_BS},'${peaje.OBSERVACION}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_PEAJE ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajeRegistrado = result.recordset[0];
+            var idPeaje = peajeRegistrado.ID_PEAJE;
+
+            if (peajeRegistrado) {
+
+                // params = [];
+                // detaPeaje.forEach(function (detalle) {
+                //     params = params + ',' + '\n' + `(${idPeaje}, ${idConductor} , '${fecha}', ${turno1}, ${turno2}, ${turno3}, ${check1}, ${check2}, ${check3},${reintegro}, ${total}, ${idUser}, ${fgViaje1}, ${fgViaje2}, ${fgViaje3})`;
+                // });
+
+                // params = params.substring(1);
+                // var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_VIATICOS_CONDUCTOR (ID_VIATICO,ID_CONDUCTOR,FECHA,TURNO1,TURNO2,TURNO3,CHECK1,CHECK2,CHECK3,REINTEGRO,TOTAL,ID_USUARIO_BS,FG_VIAJE1,FG_VIAJE2,FG_VIAJE3) 
+                // VALUES ${params}`;
+
+                return res.status(200).send({
+                    ok: true,
+                    peajeRegistrado,
+                    detaPeaje
+                });
+
+            } else {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'Error en el registro de peaje'
+                });      
+            }
+        }
+    });  
+});
+// End Register peaje
+
+// Get peajes
+app.get('/peajes/:desde/:hasta/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var search = req.params.search;
+    var params =  `'${desde}','${hasta}','${search}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_VIEW_OP_PEAJES_CONDUCTOR ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajes = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                peajes
+            });
+        }
+    });  
+});
+// End Get peajes
+    
 module.exports = app;
 
 
