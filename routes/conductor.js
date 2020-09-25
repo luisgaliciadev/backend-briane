@@ -8,6 +8,7 @@ var app = express();
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
 var mdAuthenticattion = require('../middlewares/authenticated');
+var nodemailer = require('nodemailer');
 
 // Get Vijes conductores 
 app.post('/viajes', (req, res) => {
@@ -56,60 +57,103 @@ app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', (req, res) => {
             });
         } else {
             var viajes = result.recordset;
-            if (viajes) {
-                params = `'${desde}', '${hasta}', '${dni}', ${zona}`;
-                request = new mssql.Request();
-                lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_VIAJES_CONDUCTOR_TARIFA ${params}`;
-                request.query(lsql, (err, result) => {
-                    if (err) { 
-                        return res.status(500).send({
-                            ok: false,
-                            message: 'Error en la petición.',
-                            error: err
-                        });
-                    } else {
-                        var viajesTarifa = result.recordset;
-                        var cantHorasProducidas = 0;
-                        var cantHorasApagar = 0;
-                        var comisionTotalHoras = 0;
-                        var comisionTotalViajes = 0;
-                        viajesTarifa.forEach(function (viaje) { 
-                            cantHorasProducidas = cantHorasProducidas + viaje.CANTIDAD_HORAS_PRODUCIDAS;
-                            cantHorasApagar = cantHorasApagar + viaje.CANTIDAD_HORAS_PAGAR;
-                            comisionTotalHoras = comisionTotalHoras + viaje.COMISION_HORAS;
-                            comisionTotalViajes = comisionTotalViajes + viaje.COMISION_VIAJES;
-                        });
+            var comisionTotalViajes = 0;
+            viajes.forEach(function (viaje) {
+                comisionTotalViajes = comisionTotalViajes + viaje.TARIFA;
+            });
+               
 
-                        request = new mssql.Request();
-                        lsql = `SELECT FE_SUPERVAN.DBO.FN_FORMATO_HORA(${cantHorasProducidas}) AS HORAS_PRODUCIDAS, FE_SUPERVAN.DBO.FN_FORMATO_HORA(${cantHorasApagar}) AS HORAS_PAGAR `;
-                        request.query(lsql, (err, result) => {
-                            if (err) { 
-                                return res.status(500).send({
-                                    ok: false,
-                                    message: 'Error en la petición.',
-                                    error: err
-                                });
-                            } else {
-                                var horas = result.recordset[0];
-                                return res.status(200).send({
-                                    ok: true, 
-                                    cantHorasProducidas: parseFloat(cantHorasProducidas.toString()).toFixed(2),
-                                    cantHorasApagar: parseFloat(cantHorasApagar.toString()).toFixed(2),
-                                    comisionTotalHoras: parseFloat(comisionTotalHoras.toString()).toFixed(2),
-                                    comisionTotalViajes: parseFloat(comisionTotalViajes.toString()).toFixed(2),
-                                    horasProducidas: horas.HORAS_PRODUCIDAS,
-                                    horasPagar: horas.HORAS_PAGAR,
-                                    viajes
-                                });          
-                            }
-                        }); 
-                    }
-                });
-            }         
+            return res.status(200).send({
+                ok: true, 
+                cantHorasProducidas: 0,
+                cantHorasApagar: 0,
+                comisionTotalHoras: 0,
+                comisionTotalViajes: parseFloat(comisionTotalViajes.toString()).toFixed(2),
+                horasProducidas: 0,
+                horasPagar: 0,
+                viajes
+            });      
+            
+                        
+               
         }
     });
 });
 // End Vijes conductores 
+
+// // Get Vijes conductores 
+// app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', (req, res) => {
+//     var desde = req.params.desde;
+//     var hasta = req.params.hasta;
+//     var dni = req.params.dni;  
+//     var search = req.params.search;
+//     var zona = req.params.zona;
+//     var params = `'${desde}', '${hasta}', '${dni}', '${search}', ${zona}`;
+//     var request = new mssql.Request();
+//     var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_VIAJES_CONDUCTOR ${params}`;   
+//     request.query(lsql, (err, result) => {
+//         if (err) { 
+//             return res.status(500).send({
+//                 ok: false,
+//                 message: 'Error en la petición.',
+//                 error: err
+//             });
+//         } else {
+//             var viajes = result.recordset;
+//             if (viajes) {
+//                 params = `'${desde}', '${hasta}', '${dni}', ${zona}`;
+//                 request = new mssql.Request();
+//                 lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_VIAJES_CONDUCTOR_TARIFA ${params}`;
+//                 request.query(lsql, (err, result) => {
+//                     if (err) { 
+//                         return res.status(500).send({
+//                             ok: false,
+//                             message: 'Error en la petición.',
+//                             error: err
+//                         });
+//                     } else {
+//                         var viajesTarifa = result.recordset;
+//                         var cantHorasProducidas = 0;
+//                         var cantHorasApagar = 0;
+//                         var comisionTotalHoras = 0;
+//                         var comisionTotalViajes = 0;
+//                         viajesTarifa.forEach(function (viaje) { 
+//                             cantHorasProducidas = cantHorasProducidas + viaje.CANTIDAD_HORAS_PRODUCIDAS;
+//                             cantHorasApagar = cantHorasApagar + viaje.CANTIDAD_HORAS_PAGAR;
+//                             comisionTotalHoras = comisionTotalHoras + viaje.COMISION_HORAS;
+//                             comisionTotalViajes = comisionTotalViajes + viaje.COMISION_VIAJES;
+//                         });
+
+//                         request = new mssql.Request();
+//                         lsql = `SELECT FE_SUPERVAN.DBO.FN_FORMATO_HORA(${cantHorasProducidas}) AS HORAS_PRODUCIDAS, FE_SUPERVAN.DBO.FN_FORMATO_HORA(${cantHorasApagar}) AS HORAS_PAGAR `;
+//                         request.query(lsql, (err, result) => {
+//                             if (err) { 
+//                                 return res.status(500).send({
+//                                     ok: false,
+//                                     message: 'Error en la petición.',
+//                                     error: err
+//                                 });
+//                             } else {
+//                                 var horas = result.recordset[0];
+//                                 return res.status(200).send({
+//                                     ok: true, 
+//                                     cantHorasProducidas: parseFloat(cantHorasProducidas.toString()).toFixed(2),
+//                                     cantHorasApagar: parseFloat(cantHorasApagar.toString()).toFixed(2),
+//                                     comisionTotalHoras: parseFloat(comisionTotalHoras.toString()).toFixed(2),
+//                                     comisionTotalViajes: parseFloat(comisionTotalViajes.toString()).toFixed(2),
+//                                     horasProducidas: horas.HORAS_PRODUCIDAS,
+//                                     horasPagar: horas.HORAS_PAGAR,
+//                                     viajes
+//                                 });          
+//                             }
+//                         }); 
+//                     }
+//                 });
+//             }         
+//         }
+//     });
+// });
+// // End Vijes conductores
 
 // Get Vijes-tarifa conductores 
 app.get('/viajestarifa/:desde/:hasta/:dni/:search/:zona', (req, res) => {
@@ -1148,7 +1192,7 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
 
     var params =  `${peaje.ID_ORDEN_SERVICIO},${peaje.CANT_REGISTROS},${peaje.MONTO_TOTAL},${peaje.ID_USUARIO_BS},'${peaje.OBSERVACION}'`;
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_PEAJE ${params}`;
-    console.log(lsql);
+    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1162,22 +1206,172 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
             var idPeaje = peajeRegistrado.ID_PEAJE;
 
             if (peajeRegistrado) {
-
-                // params = [];
-                // detaPeaje.forEach(function (detalle) {
-                //     params = params + ',' + '\n' + `(${idPeaje}, ${idConductor} , '${fecha}', ${turno1}, ${turno2}, ${turno3}, ${check1}, ${check2}, ${check3},${reintegro}, ${total}, ${idUser}, ${fgViaje1}, ${fgViaje2}, ${fgViaje3})`;
-                // });
-
-                // params = params.substring(1);
-                // var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_VIATICOS_CONDUCTOR (ID_VIATICO,ID_CONDUCTOR,FECHA,TURNO1,TURNO2,TURNO3,CHECK1,CHECK2,CHECK3,REINTEGRO,TOTAL,ID_USUARIO_BS,FG_VIAJE1,FG_VIAJE2,FG_VIAJE3) 
-                // VALUES ${params}`;
-
-                return res.status(200).send({
-                    ok: true,
-                    peajeRegistrado,
-                    detaPeaje
+                params = [];
+                detaPeaje.forEach(function (detalle) {
+                    var arrayFecha = detalle.fecha.split('-');
+                    var fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0]; 
+                    params = params + ',' + '\n' + `(${idPeaje},${detalle.idConductor},${detalle.monto},'${detalle.fecha}')`;
                 });
+                params = params.substring(1);
+                var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_PEAJES (ID_PEAJE,ID_CONDCUTOR,MONTO,FECHA) 
+                VALUES ${params}`;
+                var request = new mssql.Request();
+                request.query(lsql, (err, result) => {
+                    // console.log(err);
+                    if (err) { 
+                        return res.status(500).send({
+                            ok: false,
+                            message: 'Error en la petición.',
+                            error: err
+                        });
+                    } else {
+                        var cantDetaPeajes = result.rowsAffected[0];
+                        params = peajeRegistrado.ID_PEAJE;
+                        var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIEW_OP_DETA_PEAJES ${params}`;
+                        var request = new mssql.Request();
+                        request.query(lsql, async (err, result) => {
+                            // console.log(err);
+                            if (err) { 
+                                return res.status(500).send({
+                                    ok: false,
+                                    message: 'Error en la petición.',
+                                    error: err
+                                });
+                            } else {
+                                var detaPeajes = result.recordset;
+                                var detalle = '';
+                                detaPeajes.forEach(function (deta) {
+                                    detalle = detalle + '\n' + `
+                                    <tr>                   
+                                        <td>${deta.ITEMS}</td>
+                                        <td>${deta.NOMBRE_APELLIDO}</td>
+                                        <td>${deta.IDENTIFICACION}</td>
+                                        <td>${deta.MONTO}</td>
+                                        <td>${deta.FH_PEAJE}</td> 
+                                    </tr>`;
+                                });
 
+                                
+                                var css = `
+                                .table-peaje {
+                                    border-collapse: collapse;
+                                    border: 1px solid;
+                                    width: 500px;
+                                }
+                
+                                .table-peaje td  {  
+                                    border: 1px solid;
+                                    text-align:center;
+                                }
+                
+                                .table-detalle {
+                                    border-collapse: collapse;
+                                    border: 1px solid;
+                                    width: 100%
+                                }
+                
+                                .table-detalle td {  
+                                    border: 1px solid;
+                                    text-align:center;
+                                }
+                
+                                .table-detalle thead td {  
+                                    font-weight: bold;
+                                    background: #AEAEAE;
+                                }
+                                `;
+                
+                                var contentHtml = `
+                                <style>
+                                    ${css}
+                                </style>
+                                <div>
+                                    <h2>Se ha generado una solicitud de peaje</h2>
+                                    <h4>Información de la solicitud:</h4>
+                                    <table class="table-peaje"">
+                                        <tr>
+                                            <td>Nro. Solicitud:</td>
+                                            <td>${peajeRegistrado.ID_PEAJE}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Fecha Solicitud:</td>
+                                            <td>${peajeRegistrado.FECHA}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Monto Total S/:</td>
+                                            <td>${peajeRegistrado.MONTO_TOTAL}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Nro. Orden de Servicio:</td>
+                                            <td>${peajeRegistrado.CORRELATIVO}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Cliente:</td>
+                                            <td>${peajeRegistrado.RAZON_SOCIAL}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ruta:</td>
+                                            <td>${peajeRegistrado.ORIGEN} - ${peajeRegistrado.DESTINO}</td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <p>${peajeRegistrado.OBSERVACION}</p>
+
+                                    <hr>
+                                    <h4>Detalles de la solicitud</h4>
+                                    <table class="table-detalle">
+                                        <thead>
+                                            <tr>            
+                                                <td>Item</td>          
+                                                <td>Conductor</td> 
+                                                <td>DNI</td>
+                                                <td>Monto S/</td>
+                                                <td>Fecha</td>      
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${detalle}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                `;
+                                
+                                /////////////////////////////////////////////////////////
+                                // Enviar correo
+                                const transporter = nodemailer.createTransport({
+                                    host: 'mail.supervan.pe',
+                                    port: 25,
+                                    secure: false,
+                                    auth: {
+                                        user: 'luis.galicia@supervan.pe',
+                                        pass: 'Lgbriane2020'
+                                    },
+                                    tls: {
+                                        // do not fail on invalid certs
+                                        rejectUnauthorized: false
+                                    },
+                                });
+                            
+                                var infoMail = await transporter.sendMail({
+                                    from: "Web Master BRIANE <luis.galicia@supervan.pe>",
+                                    to: 'luis.galicia@supervan.pe',
+                                    subject: 'Notificaciones BRIANE SMART',
+                                    html: contentHtml
+                                });
+                                // console.log('infoMail: ', infoMail.messageId);
+                                // FIN ENVIAR CORREO
+                                ///////////////////////////////////////////////////////////////
+
+                                return res.status(200).send({
+                                    ok: true,                             
+                                    peajeRegistrado,
+                                    cantDetaPeajes,
+                                    infoMail: infoMail.messageId
+                                });
+                            }
+                        });
+                    }
+                });
             } else {
                 return res.status(400).send({
                     ok: false,
@@ -1196,7 +1390,6 @@ app.get('/peajes/:desde/:hasta/:search', mdAuthenticattion.verificarToken, (req,
     var search = req.params.search;
     var params =  `'${desde}','${hasta}','${search}'`;
     var lsql = `FE_SUPERVAN.DBO.SP_VIEW_OP_PEAJES_CONDUCTOR ${params}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1215,6 +1408,363 @@ app.get('/peajes/:desde/:hasta/:search', mdAuthenticattion.verificarToken, (req,
     });  
 });
 // End Get peajes
+
+// Get peaje
+app.get('/peaje/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idPeaje = req.params.id;
+    var params =  `${idPeaje}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_PEAJES_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peaje = result.recordset[0];
+            // var idPeaje = 
+            if (peaje) {
+                var lsql = `FE_SUPERVAN.DBO.SP_DETA_PEAJES ${params}`;
+                var request = new mssql.Request();
+                request.query(lsql, (err, result) => {
+                    if (err) { 
+                        return res.status(500).send({
+                            ok: false,
+                            message: 'Error en la petición.',
+                            error: err
+                        });
+                    } else {
+                        var detaPeajes = result.recordset;
+                        return res.status(200).send({
+                            ok: true,
+                            peaje,
+                            detaPeajes
+                        });
+                    }
+                });
+            } else {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe el registro de peaje.',
+                });
+            }  
+        }
+    });  
+});
+// End Get peaje
+
+// Update peaje
+app.put('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var body = req.body;
+    var peaje = body.peaje;
+    var params =  `${peaje.ID_PEAJE},${peaje.ID_ORDEN_SERVICIO},${peaje.CANT_REGISTROS},${peaje.MONTO_TOTAL},'${peaje.OBSERVACION}',${peaje.ID_USUARIO_BS}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_PEAJES_CONDUCTOR ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peaje = result.recordset[0];
+            if (peaje) {
+                var idPeaje = peaje.ID_PEAJE;
+                if (!idPeaje) {
+                    return res.status(400).send({
+                        ok: false,
+                        message: 'No existe el registro de peaje.'
+                    });  
+                }
+                return res.status(200).send({
+                    ok: true,                             
+                    peaje
+                });
+            }
+        }
+    });  
+});
+// End Update peaje
+
+// Register deta peaje
+app.post('/detapeaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var body = req.body;
+    var peaje = body;
+    var params =  `${peaje.idPeaje},${peaje.idConductor},${peaje.monto},'${peaje.fecha}','${peaje.idUser}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_DETA_PEAJE ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaPeaje = result.recordset[0];
+            return res.status(200).send({
+                ok: true,                             
+                detaPeaje
+            });
+        }
+    });  
+});
+// End Register peaje
+
+// Delete deta peajes
+app.delete('/detapeajes/:idPeaje/:idDeta/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idPeaje = req.params.idPeaje;
+    var idDeta = req.params.idDeta;
+    var idUser = req.params.idUser;
+    var params =  `${idPeaje},${idDeta},${idUser}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_DETA_PEAJE ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaPeaje = result.recordset[0];
+            if (detaPeaje) {
+                var idDetaPeaje = detaPeaje.ID_DETA_PEAJE;
+                if (!idDetaPeaje) {
+                    return res.status(400).send({
+                        ok: true,
+                        message: detaPeaje.MESSAGE
+                    }); 
+                }
+                return res.status(200).send({
+                    ok: true,
+                    detaPeaje
+                });
+            } else {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe registro del detalle de peaje.',
+                }); 
+            }
+        }
+    });  
+});
+// End Delete deta peajes
+
+// Delete  peajes
+app.delete('/peaje/:idPeaje/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idPeaje = req.params.idPeaje;
+    var idUser = req.params.idUser;
+    var params =  `${idPeaje},${idUser}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_PEAJES_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, async (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peaje = result.recordset[0];
+            // console.log(peaje);
+            if (peaje) {
+                var idPeaje = peaje.ID_PEAJE;
+                if (!idPeaje) {
+                    return res.status(400).send({
+                        ok: true,
+                        message: peaje.MESSAGE
+                    }); 
+                }
+                return res.status(200).send({
+                    ok: true,
+                    peaje
+                });
+            } else {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe el registro de peaje.',
+                }); 
+            }
+        }
+    });  
+});
+// End Delete peajes
+
+// Register peaje factura
+app.post('/peajefact', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var body = req.body;
+    var factura = body;
+    var params =  `${factura.idPeaje},${factura.idDetallePeaje},'${factura.numero}',${factura.monto},'${factura.fecha}',${factura.idGuia},${factura.idUser},${factura.idTipoDoc}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_RELACION_PEAJE_FACTURA ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajeFactura = result.recordset[0];
+            return res.status(200).send({
+                ok: true,                             
+                peajeFactura
+            });
+        }
+    });  
+    // return res.status(200).send({
+    //     ok: true,                             
+    //     factura
+    // });
+});
+// End Register peaje factura
+
+// Get peajes facturas
+app.get('/peajefact/:idDeta', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idDeta = req.params.idDeta;
+    var params =  `${idDeta}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_OP_RELACION_PEAJE_FACTURAS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajesFacturas = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                peajesFacturas
+            });
+        }
+    });  
+});
+// End Get peajes facturas
+
+// Delete peaje factura
+app.delete('/peajefact/:id/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var id = req.params.id;
+    var idUser = req.params.idUser;
+    var params =  `${id},${idUser}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_PEAJE_FACTURA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, async (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajeFactura = result.recordset[0];
+            if (peajeFactura) {
+                var idRelacion = peajeFactura.ID_RELACION_PEAJES;
+                if (!idRelacion) {
+                    return res.status(400).send({
+                        ok: true,
+                        message: peaje.MESSAGE
+                    }); 
+                }
+                return res.status(200).send({
+                    ok: true,
+                    peajeFactura
+                });
+            } else {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe el registro de factura.',
+                }); 
+            }
+        }
+    });  
+});
+// End Delete peaje factura
+
+// Get tipo documento peajes
+app.get('/peajes/documentos', mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var lsql = `FE_SUPERVAN.DBO.SP_OP_TIPO_DOC_PEAJE`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentosPeaje = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                documentosPeaje
+            });
+        }
+    });  
+});
+// End Get tipo documento peajes
+
+// Update deta peaje 
+app.put('/detapeaje/:idDeta/:valor/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idDeta = req.params.idDeta;
+    var valor = req.params.valor;
+    var idUser = req.params.idUser;
+    var params =  `${idDeta}, ${valor},${idUser}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_DETA_PEAJES_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaPeaje = result.recordset[0];   
+            return res.status(200).send({
+                ok: true,
+                detaPeaje
+            });
+        }
+    });  
+});
+// End Update deta peaje 
+
+// Update all deta peaje 
+app.put('/alldetapeaje/:idPeaje/:valor/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idPeaje = req.params.idPeaje;
+    var valor = req.params.valor;
+    var idUser = req.params.idUser;
+    var params =  `${idPeaje}, ${valor},${idUser}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_ALL_DETA_PEAJES_CONDUCTOR ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaPeajes = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                detaPeajes
+            });
+        }
+    });  
+});
+// End Update all deta peaje 
+
     
 module.exports = app;
 

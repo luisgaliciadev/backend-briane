@@ -2501,4 +2501,34 @@ app.get('/reportprodop/:id', mdAuthenticattion.verificarToken, (req, res, next )
 });
 // End Get report productividad
 
+// Get validar nro guia
+app.get('/nroguia/:correlativo',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var correlativo = req.params.correlativo;
+    var params =  `'${correlativo}'`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_VALIDAR_NRO_GUIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guia = result.recordset[0];
+            if(!guia) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe el numero de guia.'
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                guia
+            });
+        }
+    });
+});
+// End Get orden servicio all
+
 module.exports = app;

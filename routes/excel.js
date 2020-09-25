@@ -19,6 +19,7 @@ app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
 
 var mdAuthenticattion = require('../middlewares/authenticated');
+const { text } = require('body-parser');
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Company
@@ -409,6 +410,9 @@ app.get('/denuncias/:search', (req, res, next ) => {
           // underline: true,
           margin: 'center'
           // numberFormat: '$#,##0.00; ($#,##0.00); -',
+        },
+        alignment: {
+          horizontal: "center"
         }
       },
       cellPink: {
@@ -491,11 +495,11 @@ app.get('/denuncias/:search', (req, res, next ) => {
 // Get Guias
 app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {       
   var idUser = req.params.idUser;
-    var search = req.params.search;
-    var desde = req.params.desde;
-    var hasta = req.params.hasta;
-    var params =  `${idUser},'${search}','${desde}','${hasta}'`;
-    var lsql = `EXEC GET_GUIAS ${params}`;
+  var search = req.params.search;
+  var desde = req.params.desde;
+  var hasta = req.params.hasta;
+  var params =  `${idUser},'${search}','${desde}','${hasta}'`;
+  var lsql = `EXEC GET_GUIAS ${params}`;
   var request = new mssql.Request();
   request.query(lsql, (err, result) => {
       if (err) { 
@@ -523,6 +527,9 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
           // underline: true,
           margin: 'center'
           // numberFormat: '$#,##0.00; ($#,##0.00); -',
+        },
+        alignment: {
+          horizontal: "center"
         }
       },
       cellPink: {
@@ -561,18 +568,18 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
       CORRELATIVO: {
         displayName: 'NRO. GUIA TRANSPORTE',
         headerStyle: styles.header,
-        width: 300 // <- width in chars (when the number is passed as string)
+        width: 100 // <- width in chars (when the number is passed as string)
       },
       NRO_GUIA_CLIENTE: {
         displayName: 'NRO. GUIA CLIENTE',
         headerStyle: styles.header,
-        width: 300 // <- width in chars (when the number is passed as string)
+        width: 100 // <- width in chars (when the number is passed as string)
       },
       FH_GUIA: {
         displayName: 'FECHA',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 150 // <- width in pixels
+        width: 1 // <- width in pixels
       },
       NOMBRE_CONDUCTOR: {
         displayName: 'CONDUCTOR',
@@ -584,61 +591,61 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         displayName: 'TRACTO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 100 // <- width in pixels
       },
       PLACA_REMOLQUE: {
         displayName: 'REMOLQUE',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 100 // <- width in pixels
       },
       PESO_BRUTO: {
         displayName: 'PESO BRUTO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 100 // <- width in pixels
       },
       PESO_TARA: {
         displayName: 'PESO TARA',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 100 // <- width in pixels
       },
       PESO_NETO: {
         displayName: 'PESO NETO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 100 // <- width in pixels
       },
       CORRELATIVO_OS: {
         displayName: 'ORDEN SERVICIO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 10 // <- width in pixels
       },
       DS_TIPO_SERVICIO: {
         displayName: 'SERVICIO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 150 // <- width in pixels
       },
       DS_ORI_DEST: {
         displayName: 'ORIGEN',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 150 // <- width in pixels
       },
       DESTINO: {
         displayName: 'DESTINO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 150 // <- width in pixels
       },
       DS_PRODUCTO: {
         displayName: 'PRODUCTO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 150 // <- width in pixels
       },
       RAZON_SOCIAL: {
         displayName: 'CLIENTE',
@@ -650,7 +657,7 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         displayName: 'COORDINADOR',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 250 // <- width in pixels
+        width: 150 // <- width in pixels
       },
     }
     const dataset = guias;
@@ -675,9 +682,162 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
       }
   });
 });
-// End Get Denuncias
+// End Get Guias
 
 // Operaciones
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Conductor
+
+// Get deta peaje telecredito
+app.get('/detapeajetelecredito/:idPeaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+  var idPeaje = req.params.idPeaje;
+  var params =  `${idPeaje}`;
+  var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIEW_OP_DETA_PEAJE_TELECREDITO ${params}`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+        return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+        });
+    } else {            
+      var detaPeajes = result.recordset;       
+      // You can define styles as json object
+      const styles = {
+        header: {          
+          fill: {
+            fgColor: {
+              rgb: '3393FF'
+            }
+          },
+          font: {
+            color: {
+              rgb: 'FFFFFFFF'
+            },
+            sz: 12,
+            bold: true,
+            // underline: true,
+            margin: 'center'
+            // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
+          }
+        },
+        cellPink: {
+          fill: {
+            fgColor: {
+              rgb: 'FFFFCCFF'
+            }
+          }
+        },
+        cellGreen: {
+          fill: {
+            fgColor: {
+              rgb: 'FF00FF00'
+            }
+          }
+        }
+      };
+      //Array of objects representing heading rows (very top)
+      const heading = [
+        [''],
+        [{value: `Solicitud de Peaje NRO.: ${detaPeajes[0].ID_PEAJE}`, style: styles.header}],
+        [''] // <-- It can be only values
+      ];       
+      //Here you specify the export structure
+      const specification = {
+        FH_EMISION: { // <- the key should match the actual data key
+          displayName: 'fechaEmision', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 85 // <- width in pixels
+        },
+        FH_VECIMIENTO: { // <- the key should match the actual data key
+          displayName: 'FechaVencimiento', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 115 // <- width in pixels
+        },
+        IDENTIFICACION: {
+          displayName: 'ID_Personal',
+          headerStyle: styles.header,
+          width: 80 // <- width in chars (when the number is passed as string)
+        },
+        SERIE: {
+          displayName: 'Serie',
+          headerStyle: styles.header,
+          width: 35 // <- width in chars (when the number is passed as string)
+        },
+        DOCUMENTO: {
+          displayName: 'Documento',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 75 // <- width in pixels
+        },
+        MONEDA: {
+          displayName: 'Moneda',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 55 // <- width in pixels
+        },
+        MONTO: {
+          displayName: 'Importe',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 55 // <- width in pixels
+        },
+        CONCEPTO: {
+          displayName: 'Concepto',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 250 // <- width in pixels
+        },
+        FECHA_APLICACION: {
+          displayName: 'FechaAplicacion',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 100 // <- width in pixels
+        },
+        ESTADO: {
+          displayName: 'Estado',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 45 // <- width in pixels
+        },
+        MENSAJE_ERROR: {
+          displayName: 'MensajeError',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 85 // <- width in pixels
+        },
+      }
+      const dataset = detaPeajes;
+      const merges = [
+        { start: { row: 2, column: 1 }, end: { row: 2, column:  11} }
+      ]
+      const report = excel.buildExport(
+        [ 
+          {
+            name: 'Report', // <- Specify sheet name (optional)
+            heading: heading, // <- Raw heading array (optional)
+            merges: merges, // <- Merge cell ranges
+            specification: specification, // <- Report specification
+            data: dataset // <-- Report data
+          }
+        ]
+      ); 
+      res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+      return res.status(200).send(report);
+    }
+  });
+});
+// End Get deta peajes telecredito
+
+
+
+// Conductor
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
