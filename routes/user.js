@@ -48,6 +48,7 @@ app.post('/', (req, res) => {
      } 
 
     var params = `'${name}', '${email}', '${password}', '${image}', '${google}', '${phone}', ${idRole}, '${iden}'`;
+    // console.log(params);
     var request = new mssql.Request();
     var lsql = `EXEC REGISTER_USER ${params}`;
     request.query(lsql, (err, result) => {
@@ -441,5 +442,6 @@ app.delete('/company/:id', mdAuthenticattion.verificarToken, (req, res, next ) =
 
 // Companys
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 module.exports = app;

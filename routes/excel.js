@@ -346,7 +346,7 @@ app.get('/clients/:id/:search', (req, res, next ) => {
       },
     }
     const dataset = clients;
-    console.log(clients)
+    // console.log(clients)
     const merges = [
       { start: { row: 2, column: 1 }, end: { row: 2, column: 5 } }
      
@@ -462,7 +462,7 @@ app.get('/denuncias/:search', (req, res, next ) => {
       },
     }
     const dataset = denuncias;
-    console.log(denuncias)
+    // console.log(denuncias)
     const merges = [
       { start: { row: 2, column: 1 }, end: { row: 2, column:  4} }
      
@@ -568,12 +568,12 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
       CORRELATIVO: {
         displayName: 'NRO. GUIA TRANSPORTE',
         headerStyle: styles.header,
-        width: 100 // <- width in chars (when the number is passed as string)
+        width: 150 // <- width in chars (when the number is passed as string)
       },
       NRO_GUIA_CLIENTE: {
         displayName: 'NRO. GUIA CLIENTE',
         headerStyle: styles.header,
-        width: 100 // <- width in chars (when the number is passed as string)
+        width: 150 // <- width in chars (when the number is passed as string)
       },
       FH_GUIA: {
         displayName: 'FECHA',
@@ -621,7 +621,7 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         displayName: 'ORDEN SERVICIO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 10 // <- width in pixels
+        width: 150 // <- width in pixels
       },
       DS_TIPO_SERVICIO: {
         displayName: 'SERVICIO',
@@ -633,13 +633,13 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         displayName: 'ORIGEN',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 150 // <- width in pixels
+        width: 180 // <- width in pixels
       },
       DESTINO: {
         displayName: 'DESTINO',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 150 // <- width in pixels
+        width: 180 // <- width in pixels
       },
       DS_PRODUCTO: {
         displayName: 'PRODUCTO',
@@ -657,7 +657,7 @@ app.get('/guias/:idUser/:search/:desde/:hasta', (req, res, next ) => {
         displayName: 'COORDINADOR',
         headerStyle: styles.header,
         // cellStyle: styles.cellPink, // <- Cell style
-        width: 150 // <- width in pixels
+        width: 250 // <- width in pixels
       },
     }
     const dataset = guias;
@@ -751,7 +751,7 @@ app.get('/detapeajetelecredito/:idPeaje', mdAuthenticattion.verificarToken, (req
       //Here you specify the export structure
       const specification = {
         FH_EMISION: { // <- the key should match the actual data key
-          displayName: 'fechaEmision', // <- Here you specify the column header
+          displayName: 'FechaEmision', // <- Here you specify the column header
           headerStyle: styles.header, // <- Header style     
           width: 85 // <- width in pixels
         },

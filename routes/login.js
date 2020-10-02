@@ -24,6 +24,8 @@ app.use(bodyParser.json());
 
 var mdAuthenticattion = require('../middlewares/authenticated');
 
+const fs = require('fs');
+
 //Google
 var CLIENT_ID = require('../config/config').CLIENT_ID;
 const { OAuth2Client } = require('google-auth-library');
@@ -218,7 +220,7 @@ app.post('/', (req, res) => {
                     var params = `${id_role}`;
                     var lsql = `EXEC GETS_MODULES ${params}`;
                     var request = new mssql.Request();
-                    request.query(lsql, (err, result) => {
+                    request.query(lsql, async (err, result) => {
                         if (err) {
                             var menu = [];
                             return menu;

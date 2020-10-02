@@ -2529,6 +2529,37 @@ app.get('/nroguia/:correlativo',mdAuthenticattion.verificarToken, (req, res, nex
         }
     });
 });
-// End Get orden servicio all
+// End Get alidar nro guia
+
+// Get validar nro guia conductor
+app.get('/nroguiacond/:correlativo/:dni',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var correlativo = req.params.correlativo;
+    var dni = req.params.dni;
+    var params =  `'${correlativo}','${dni}'`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_VALIDAR_NRO_GUIA_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guia = result.recordset[0];
+            if(!guia) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe el numero de guia.'
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                guia
+            });
+        }
+    });
+});
+// End Get alidar nro guia conductor
 
 module.exports = app;

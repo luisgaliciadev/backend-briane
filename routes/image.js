@@ -21,7 +21,17 @@ app.get('/:tipo/:image', (req, res, next ) => {
                 res.contentType("application/pdf");
                 res.send(data);
             });
-        } else {            
+        }
+
+        if (ext === 'apk') {
+            fs.readFile(pathImage , function (err,data){
+                // res.contentType("application/apk");
+                // res.send(data);
+                res.download(pathImage);
+            });
+        } 
+        
+        if (ext != 'apk' || ext != 'pdf' || ext != 'PDF') {            
             res.sendFile(pathImage)
         }
 
