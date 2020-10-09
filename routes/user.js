@@ -252,6 +252,31 @@ app.delete('/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
 });
 // End Delete User
 
+// Get agenda telefonica genesys
+app.get('/agendatelefonica/:search',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var search = req.params.search;
+    var params = `'${search}'`;
+    var lsql = `EXEC GET_LIST_AGENDA_ADMIN_GENESYS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var agendas = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                agendas
+            });
+        }
+    });
+});
+// End Get agenda telefonica gesnsys
+
+
 // User 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

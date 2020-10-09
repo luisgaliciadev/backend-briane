@@ -44,6 +44,7 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
         var fileName = file.name.split('.');
         var extFile = fileName[fileName.length - 1];
         
+        
         // console.log('tipo:', tipo);
         if (tipo === 'user' || tipo === 'company') {
             var extValida = ['png', 'PNG', 'jpeg', 'JPEG', 'gif', 'GIF', 'jpg', 'JPG'];
@@ -60,7 +61,7 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
         if (extValida.indexOf(extFile) < 0) {
             res.status(400).send({
                 ok: false,
-                message: 'Extensión de archivo no valida.'
+                message: 'Extensión de archivo no valida.' + 'extFile: ' + extFile
             });
         } else {
             // File Name
