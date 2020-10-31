@@ -1364,38 +1364,40 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
                                     </table>
                                 </div>
                                 `;
-                                
-                                /////////////////////////////////////////////////////////
+
                                 // Enviar correo
                                 const transporter = nodemailer.createTransport({
-                                    host: 'mail.supervan.pe',
-                                    port: 25,
-                                    secure: false,
+                                    host: 'briane.pe',
+                                    port: 465,
                                     auth: {
-                                        user: 'briane.smart@supervan.pe',
+                                        user: 'briane.smart@briane.pe',
                                         pass: 'Brian@2020'
                                     },
-                                    tls: {
-                                        // do not fail on invalid certs
-                                        rejectUnauthorized: false
-                                    },
-                                });
-                            
-                                var infoMail = await transporter.sendMail({
-                                    from: "BRIANE SMART <briane.smart@supervan.pe>",
-                                    to: 'luis.galicia@supervan.pe; luisgalic@gmail.com',
+                                });            
+                                var infoMail = '';
+                                var datosEnvio = {
+                                    from: "BRIANE SMART <briane.smart@briane.pe>",
+                                    to: 'luis.galicia@supervan.pe',
+                                    bcc: 'briane.smart@briane.pe',
                                     subject: 'Notificaciones BRIANE SMART',
                                     html: contentHtml
+                                }
+                                transporter.sendMail(datosEnvio, function(error, info){
+                                    if (error) {
+                                        console.log('error:', error);
+                                    } else {
+                                        // console.log('info:', info);
+                                        infoMail = info.messageId
+                                    }
                                 });
-                                // console.log('infoMail: ', infoMail.messageId);
-                                // FIN ENVIAR CORREO
-                                ///////////////////////////////////////////////////////////////
-
+                                // // FIN ENVIAR CORREO
+                                // ////////////////////////////////////////////////////////////
+                                
                                 return res.status(200).send({
                                     ok: true,                             
                                     peajeRegistrado,
                                     cantDetaPeajes,
-                                    infoMail: infoMail.messageId
+                                    infoMail: infoMail
                                 });
                             }
                         });
@@ -1484,6 +1486,34 @@ app.get('/peaje/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
 });
 // End Get peaje
 
+// Get peajes saldos
+app.get('/peajesaldos/:desde/:hasta/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var search = req.params.search;
+    var params =  `'${desde}','${hasta}','${search}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_VIEW_OP_DETA_PEAJES_SALDOS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajeSaldos = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                peajeSaldos
+            });
+        }
+    });  
+});
+// End Get peajes saldos
+
+
+
 // Update peaje
 app.put('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
     var body = req.body;
@@ -1500,12 +1530,18 @@ app.put('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
             });
         } else {
             var peaje = result.recordset[0];
+            if (!peaje) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existe el registro de peaje.'
+                });  
+            }
             if (peaje) {
                 var idPeaje = peaje.ID_PEAJE;
                 if (!idPeaje) {
                     return res.status(400).send({
                         ok: false,
-                        message: 'No existe el registro de peaje.'
+                        message: peaje.MESSAGE
                     });  
                 }
                 return res.status(200).send({
@@ -1534,6 +1570,13 @@ app.post('/detapeaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
             });
         } else {
             var detaPeaje = result.recordset[0];
+            var idDetaPeaje = detaPeaje.ID_DETA_PEAJE;
+            if (!idDetaPeaje) {
+                return res.status(400).send({
+                    ok: true,
+                    message: detaPeaje.MESSAGE
+                }); 
+            }
             return res.status(200).send({
                 ok: true,                             
                 detaPeaje
@@ -1626,7 +1669,13 @@ app.delete('/peaje/:idPeaje/:idUser', mdAuthenticattion.verificarToken, (req, re
 app.post('/peajefact', mdAuthenticattion.verificarToken, (req, res, next ) => {       
     var body = req.body;
     var factura = body;
-    var params =  `${factura.idPeaje},${factura.idDetallePeaje},'${factura.numero}',${factura.monto},'${factura.fecha}',${factura.idGuia},${factura.idUser},${factura.idTipoDoc}`;
+    if (factura.idTipoDoc === 1) {
+        var arrayNroDoc = factura.numero.split('-');
+        var nroDoc = arrayNroDoc[0].toUpperCase() + '-' + arrayNroDoc[1].padStart(8 , 0)    
+    } else {
+        var nroDoc = factura.numero.padStart(8 , 0) 
+    }
+    var params =  `${factura.idPeaje},${factura.idDetallePeaje},'${nroDoc}',${factura.monto},'${factura.fecha}',${factura.idGuia},${factura.idUser},${factura.idTipoDoc}`;
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_RELACION_PEAJE_FACTURA ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -1638,10 +1687,19 @@ app.post('/peajefact', mdAuthenticattion.verificarToken, (req, res, next ) => {
             });
         } else {
             var peajeFactura = result.recordset[0];
-            return res.status(200).send({
-                ok: true,                             
-                peajeFactura
-            });
+            if (peajeFactura) {
+                var idRelacionPeajes = peajeFactura.ID_RELACION_PEAJES;
+                if (!idRelacionPeajes) {
+                    return res.status(400).send({
+                        ok: false,                             
+                        message: peajeFactura.MESSAGE
+                    });
+                }
+                return res.status(200).send({
+                    ok: true,                             
+                    peajeFactura
+                });
+            }
         }
     });  
     // return res.status(200).send({
@@ -1655,7 +1713,13 @@ app.post('/peajefact', mdAuthenticattion.verificarToken, (req, res, next ) => {
 app.post('/peajefactapp', mdAuthenticattion.verificarToken, (req, res, next ) => {       
     var body = req.body;
     var factura = body;
-    var params =  `0,0,'${factura.numero}',${factura.monto},'${factura.fecha}',${factura.idGuia},${factura.idUser},1,'${factura.dni}'`;
+    if (factura.idTipoDoc === 1) {
+        var arrayNroDoc = factura.numero.split('-');
+        var nroDoc = arrayNroDoc[0].toUpperCase() + '-' + arrayNroDoc[1].padStart(8 , 0)    
+    } else {
+        var nroDoc = factura.numero.padStart(8 , 0) 
+    }
+    var params =  `0,0,'${nroDoc}',${factura.monto},'${factura.fecha}',${factura.idGuia},${factura.idUser},${factura.idTipoDoc},'${factura.dni}'`;
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_RELACION_PEAJE_FACTURA_APP ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -1667,9 +1731,10 @@ app.post('/peajefactapp', mdAuthenticattion.verificarToken, (req, res, next ) =>
             });
         } else {
             var peajeFactura = result.recordset[0];
+            // console.log('peajeFactura', peajeFactura);
             if (peajeFactura) {
-                var idDetaPeaje = peajeFactura.ID_DETA_PEAJE;
-                if (!idDetaPeaje) {
+                var idRelacionPeajes = peajeFactura.ID_RELACION_PEAJES;
+                if (!idRelacionPeajes) {
                     return res.status(400).send({
                         ok: false,                             
                         message: peajeFactura.MESSAGE
@@ -1734,7 +1799,7 @@ app.delete('/peajefact/:id/:idUser', mdAuthenticattion.verificarToken, (req, res
                 if (!idRelacion) {
                     return res.status(400).send({
                         ok: true,
-                        message: peaje.MESSAGE
+                        message: peajeFactura.MESSAGE
                     }); 
                 }
                 return res.status(200).send({
@@ -1790,11 +1855,23 @@ app.put('/detapeaje/:idDeta/:valor/:idUser', mdAuthenticattion.verificarToken, (
                 error: err
             });
         } else {
-            var detaPeaje = result.recordset[0];   
-            return res.status(200).send({
-                ok: true,
-                detaPeaje
-            });
+            var detaPeaje = result.recordset[0]; 
+            var idPeaje = detaPeaje.ID_PEAJE;
+            if (!idPeaje) {
+                return res.status(400).send({
+                    ok: false,
+                    message: detaPeaje.MESSAGE
+                });
+            }
+            // return res.status(200).send({
+            //     ok: true,
+            //     detaPeajes
+            // });
+            // var detaPeaje = result.recordset[0];   
+            // return res.status(200).send({
+            //     ok: true,
+            //     detaPeaje
+            // });
         }
     });  
 });
@@ -1816,7 +1893,14 @@ app.put('/alldetapeaje/:idPeaje/:valor/:idUser', mdAuthenticattion.verificarToke
                 error: err
             });
         } else {
-            var detaPeajes = result.recordset;   
+            var detaPeajes = result.recordset; 
+            var idPeaje = detaPeajes[0].ID_PEAJE;
+            if (!idPeaje) {
+                return res.status(400).send({
+                    ok: false,
+                    message: detaPeajes[0].MESSAGE
+                });
+            }
             return res.status(200).send({
                 ok: true,
                 detaPeajes
@@ -1842,12 +1926,13 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
             });
         } else {
             var peajes = result.recordset;
-            if (peajes) {
+            if (peajes.length > 0) {
+                // console.log(peajes);
                 var idPeaje = peajes[0].ID_PEAJE;
                 if (!idPeaje) {
                     return res.status(400).send({
                         ok: true,
-                        message: peajes.MESSAGE
+                        message: peajes[0].MESSAGE
                     }); 
                 }
 
@@ -1943,36 +2028,63 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                     </table>
                 </div>
                 `;
-                
                 /////////////////////////////////////////////////////////
-                // Enviar correo
+                // Enviar correo              
                 const transporter = nodemailer.createTransport({
-                    host: 'mail.supervan.pe',
-                    port: 25,
-                    secure: false,
+                    host: 'briane.pe',
+                    port: 465,
                     auth: {
-                        user: 'briane.smart@supervan.pe',
+                        user: 'briane.smart@briane.pe',
                         pass: 'Brian@2020'
                     },
-                    tls: {
-                        // do not fail on invalid certs
-                        rejectUnauthorized: false
-                    },
-                });
-            
-                var infoMail = await transporter.sendMail({
-                    from: "BRIANE SMART <briane.smart@supervan.pe>",
-                    to: 'luis.galicia@supervan.pe; luisgalic@gmail.com',
+                });            
+                var infoMail = '';
+                var datosEnvio = {
+                    from: "BRIANE SMART <briane.smart@briane.pe>",
+                    to: 'luis.galicia@supervan.pe',
+                    bcc: 'briane.smart@briane.pe',
                     subject: 'Notificaciones BRIANE SMART',
                     html: contentHtml
+                }
+                transporter.sendMail(datosEnvio, function(error, info){
+                    if (error) {
+                        console.log('error:', error);
+                    } else {
+                        // console.log('info:', info);
+                        infoMail = info.messageId
+                    }
                 });
-                // console.log('infoMail: ', infoMail.messageId);
+
+                // const transporter = nodemailer.createTransport({
+                //     host: 'smtp.office365.com',
+                //     port: 587,
+                //     secureConnection: false,
+                //     tls: { ciphers: 'SSLv3' },
+                //     auth: {                        
+                //         user: 'luis.galicia@supervan.pe',
+                //         pass: 'Gals*368'
+                //     },
+                // });
+                // var infoMail = '';
+                // var datosEnvio = {
+                //     from: "BRIANE SMART <luis.galicia@supervan.pe>",
+                //     to: 'luis.galicia@supervan.pe',
+                //     subject: 'Notificaciones BRIANE SMART',
+                //     html: contentHtml
+                // }
+                // transporter.sendMail(datosEnvio, function(error, info){
+                //     if (error) {
+                //         console.log('error:', error);
+                //     } else {
+                //         // console.log('info:', info);
+                //         infoMail = info.messageId
+                //     }
+                // });
                 // FIN ENVIAR CORREO
                 ////////////////////////////////////////////////////////////
                 return res.status(200).send({
                     ok: true,                     
-                    peajes,
-                    infoMail: infoMail.messageId
+                    peajes
                 });
 
             } else {
@@ -1986,6 +2098,182 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
 });
 // End procesar peaje
 
+// Liquidar peaje
+app.put('/liquidarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var id = req.params.id;
+    var idUser = req.params.idUser;
+    var params =  `${id},${idUser}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_LIQUIDAR_PEAJES_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, async (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajes = result.recordset;
+            // console.log(peajes);
+            if (peajes) {
+                var idPeaje = peajes[0].ID_PEAJE;
+                if (!idPeaje) {
+                    return res.status(400).send({
+                        ok: true,
+                        message: peajes[0].MESSAGE
+                    }); 
+                }
+                return res.status(200).send({
+                    ok: true,
+                    peajes
+                }); 
+            }
+        }
+    });
+});
+
+// Notificar saldos peaje
+app.post('/notificarsaldos/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var body = req.body;
+    var idUser = req.params.idUser;
+    var params = '';
+    var detalle = '';
+    var i = 0;   
+    body.forEach(function (deta) {
+        i++;
+        params = params + ',' + '\n' + `(${deta.idDetaPeaje}, 1)`;
+        detalle = detalle + '\n' + `
+        <tr>                   
+            <td>${i}</td>
+            <td>${deta.nroSolicitudPeaje}</td>
+            <td>${deta.fechaSolicitudPeaje}</td>
+            <td>${deta.nroOrdenServicio}</td>
+            <td>${deta.conductor}</td>
+            <td>${deta.dni}</td>
+            <td>${deta.fechaPeaje}</td>
+            <td>${deta.montoPeaje}</td>
+            <td>${deta.saldo}</td> 
+        </tr>`;
+    });     
+    params = params.substring(1);   
+    var lsql = `UPDATE A SET A.FG_NOTIFICADO = N.valor FROM FE_SUPERVAN.DBO.OP_DETA_PEAJES A JOIN (VALUES ${params}) N (idDeta, valor) ON A.ID_DETA_PEAJE = idDeta`;
+    var request = new mssql.Request();
+    request.query(lsql, async (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var notificacion = result.rowsAffected[0];
+            if (notificacion !== body.length) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No se pudo enviar la notificación.'
+                });
+            }
+            var css = `
+            .table-peaje {
+                border-collapse: collapse;
+                border: 1px solid;
+                width: 500px;
+            }
+            .table-peaje td  {  
+                border: 1px solid;
+                text-align:center;
+            }
+            .table-detalle {
+                border-collapse: collapse;
+                border: 1px solid;
+                width: 100%
+            }
+            .table-detalle td {  
+                border: 1px solid;
+                text-align:center;
+            }
+            .table-detalle thead td {  
+                font-weight: bold;
+                background: #AEAEAE;
+            }
+            `;
+
+            var contentHtml = `
+            <style>
+                ${css}
+            </style>
+            <div>
+                <h2>Listado de conductores con saldos de peaje</h2>           
+                <table class="table-detalle">
+                    <thead>
+                        <tr>            
+                            <td>Item</td>          
+                            <td>Nro. Solicitud Peaje</td> 
+                            <td>Fecha Solicitud</td>
+                            <td>Nro. Orden Servicio</td>
+                            <td>Conductor</td>
+                            <td>DNI</td>
+                            <td>Fecha Peaje</td>
+                            <td>Monto S/</td>
+                            <td>Saldo S/</td>        
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${detalle}
+                    </tbody>
+                </table>
+            </div>
+            `;
+            /////////////////////////////////////////////////////////
+            // Enviar correo              
+            const transporter = nodemailer.createTransport({
+                host: 'briane.pe',
+                port: 465,
+                auth: {
+                    user: 'briane.smart@briane.pe',
+                    pass: 'Brian@2020'
+                },
+            });            
+            var infoMail = '';
+            var datosEnvio = {
+                from: "BRIANE SMART <briane.smart@briane.pe>",
+                to: 'luis.galicia@supervan.pe',
+                bcc: 'briane.smart@briane.pe',
+                subject: 'Notificaciones BRIANE SMART',
+                html: contentHtml
+            }
+            // transporter.sendMail(datosEnvio, function(error, info){
+            //     if (error) {
+            //         console.log('error:', error);
+            //     } else {
+            //         // console.log('info:', info);
+            //         infoMail = info.messageId
+            //     }
+            // });
+
+            var infoMail = await transporter.sendMail({
+                from: "BRIANE SMART <briane.smart@briane.pe>",
+                to: 'luis.galicia@supervan.pe;',
+                bcc: 'briane.smart@briane.pe',
+                subject: 'Notificaciones BRIANE SMART',
+                html: contentHtml
+            });
+            if (infoMail) {
+                return res.status(200).send({
+                    ok: true,
+                    notificacion,
+                    infoMail: infoMail.messageId
+                });
+            } else {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No se pudo enviar la notificación.'
+                });
+            } 
+        }
+    });
+});
+// End notificar saldos peaje
     
 module.exports = app;
 

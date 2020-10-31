@@ -190,40 +190,75 @@ app.put('/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
 app.put('/password/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var id = req.params.id;
     var body = req.body;
-    var password = bcrypt.hashSync(body.PASSWORD, 10);
-    var params = `${id}, '${password}'`;
+
+    // VERIFICAR CONTRASEÑA ACTUAL
+    var params = `'${body.EMAIL}'`;
     var request = new mssql.Request();
-    var lsql = `EXEC UPDATE_PASSWORD ${params}`;
-    var request = new mssql.Request();
+    var lsql = `EXEC LOGIN ${params}`;
     request.query(lsql, (err, result) => {
-        if (err) { 
+        if (err) {
             return res.status(500).send({
                 ok: false,
                 message: 'Error en la petición.',
                 error: err
             });
         } else {
-            var userUpdated = result.recordset;
-            if (userUpdated.length === 0) {
+            var userLogin = result.recordset;
+            var ID_USER = userLogin[0].ID_USER;
+            var loginPassword = userLogin[0].PASSWORD;
+
+            if (ID_USER === 0) {
                 return res.status(400).send({
                     ok: true,
-                    message: 'Usuario no registrado.'
+                    message: userLogin[0].MESSAGE
                 });
             } else {
-                if (userUpdated[0].ID_USER ===0) {
+                if (!bcrypt.compareSync(body.PASSWORD, loginPassword)) {
                     return res.status(400).send({
                         ok: true,
-                        message: userUpdated[0].MESSAGE
-                    });
-                } else {
-                    return res.status(200).send({
-                        ok: true,
-                        user: userUpdated[0]
+                        message: 'Contraseña Actual Incorrecta.',
+                        error: err
                     });
                 }
+
+                var password = bcrypt.hashSync(body.PASSWORD_NEW, 10);
+                var params = `${id}, '${password}'`;
+                var request = new mssql.Request();
+                var lsql = `EXEC UPDATE_PASSWORD ${params}`;
+                var request = new mssql.Request();
+                request.query(lsql, (err, result) => {
+                    if (err) { 
+                        return res.status(500).send({
+                            ok: false,
+                            message: 'Error en la petición.',
+                            error: err
+                        });
+                    } else {
+                        var userUpdated = result.recordset;
+                        if (userUpdated.length === 0) {
+                            return res.status(400).send({
+                                ok: true,
+                                message: 'Usuario no registrado.'
+                            });
+                        } else {
+                            if (userUpdated[0].ID_USER ===0) {
+                                return res.status(400).send({
+                                    ok: true,
+                                    message: userUpdated[0].MESSAGE
+                                });
+                            } else {
+                                return res.status(200).send({
+                                    ok: true,
+                                    user: userUpdated[0]
+                                });
+                            }
+                        }
+                    }
+                });
             }
         }
     });
+    // FIN VERIFICAR CONTRASEÑA ACTUAL
 });
 // End Update Password User
 

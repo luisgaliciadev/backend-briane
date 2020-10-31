@@ -57,6 +57,9 @@ app.get('/companys/:id/:search', (req, res, next ) => {
             // underline: true,
             margin: 'center'
             // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
           }
         },
         cellPink: {
@@ -185,6 +188,9 @@ app.get('/users/:search', (req, res, next ) => {
                     sz: 12,
                     bold: true,
                     margin: 'center'
+                  },
+                  alignment: {
+                    horizontal: "center"
                   }
                 },
                 cellPink: {
@@ -216,22 +222,22 @@ app.get('/users/:search', (req, res, next ) => {
               EMAIL: {
                 displayName: 'EMAIL',
                 headerStyle: styles.header,
-                width: 150 
+                width: 250 
               },
               DS_ROLE: {
                 displayName: 'ROL',
                 headerStyle: styles.header,
-                width: 100
+                width: 200
               },
-              AUTHENTICATION: {
-                displayName: 'AUTENTICACION',
-                headerStyle: styles.header,
-                width: 100
-              }
+              // AUTHENTICATION: {
+              //   displayName: 'AUTENTICACION',
+              //   headerStyle: styles.header,
+              //   width: 100
+              // }
             }
               const dataset = users;
             const merges = [
-              { start: { row: 2, column: 1 }, end: { row: 2, column: 4 } }
+              { start: { row: 2, column: 1 }, end: { row: 2, column: 3 } }
             ]
             const report = excel.buildExport(
               [ 
@@ -835,7 +841,146 @@ app.get('/detapeajetelecredito/:idPeaje', mdAuthenticattion.verificarToken, (req
 });
 // End Get deta peajes telecredito
 
-
+// Get Get saldos peaje
+app.get('/saldospeaje/:desde/:hasta/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+  var desde = req.params.desde;
+  var hasta = req.params.hasta;
+  var search = req.params.search;
+  var params =  `'${desde}','${hasta}','${search}'`;
+  var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIEW_OP_DETA_PEAJES_SALDOS ${params}`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+        return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+        });
+    } else {            
+      var detaPeajes = result.recordset;       
+      // You can define styles as json object
+      const styles = {
+        header: {          
+          fill: {
+            fgColor: {
+              rgb: '3393FF'
+            }
+          },
+          font: {
+            color: {
+              rgb: 'FFFFFFFF'
+            },
+            sz: 12,
+            bold: true,
+            // underline: true,
+            margin: 'center'
+            // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
+          }
+        },
+        cellPink: {
+          fill: {
+            fgColor: {
+              rgb: 'FFFFCCFF'
+            }
+          }
+        },
+        cellGreen: {
+          fill: {
+            fgColor: {
+              rgb: 'FF00FF00'
+            }
+          }
+        }
+      };
+      //Array of objects representing heading rows (very top)
+      const heading = [
+        [''],
+        [{value: `SALDOS DE CONDUCTORES - (PEAJES)`, style: styles.header}],
+        [''] // <-- It can be only values
+      ];       
+      //Here you specify the export structure
+      const specification = {
+        ITEMS: { // <- the key should match the actual data key
+          displayName: 'ITEM', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 50 // <- width in pixels
+        },
+        ID_PEAJE: { // <- the key should match the actual data key
+          displayName: 'NRO. SOLICITUD', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+        FH_SOLICITUD: {
+          displayName: 'FECHA SOLICITUD',
+          headerStyle: styles.header,
+          width: 115 // <- width in chars (when the number is passed as string)
+        },
+        CORRELATIVO: {
+          displayName: 'NRO. ORDEN SERVICIO',
+          headerStyle: styles.header,
+          width: 150 // <- width in chars (when the number is passed as string)
+        },
+        IDENTIFICACION: {
+          displayName: 'DNI',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 85 // <- width in pixels
+        },
+        NOMBRE_APELLIDO: {
+          displayName: 'CONDUCTOR',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 250 // <- width in pixels
+        },
+        FH_PEAJE: {
+          displayName: 'FECHA',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 100 // <- width in pixels
+        },
+        MONTO: {
+          displayName: 'MONTO (S/)',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 80 // <- width in pixels
+        },
+        ABONO: {
+          displayName: 'ABONO (S/)',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 80 // <- width in pixels
+        },
+        TOTAL_SUSTENTAR: {
+          displayName: 'SALDO (S/)',
+          headerStyle: styles.header,
+          // cellStyle: styles.cellPink, // <- Cell style
+          width: 80 // <- width in pixels
+        },
+      }
+      const dataset = detaPeajes;
+      const merges = [
+        { start: { row: 2, column: 1 }, end: { row: 2, column:  10} }
+      ]
+      const report = excel.buildExport(
+        [ 
+          {
+            name: 'Report', // <- Specify sheet name (optional)
+            heading: heading, // <- Raw heading array (optional)
+            merges: merges, // <- Merge cell ranges
+            specification: specification, // <- Report specification
+            data: dataset // <-- Report data
+          }
+        ]
+      ); 
+      res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+      return res.status(200).send(report);
+    }
+  });
+});
+// End Get saldos peaje
 
 // Conductor
 ///////////////////////////////////////////////////////////////////////////////////////////////

@@ -55,6 +55,12 @@ var config = {
     server: '190.117.103.41',
     //port:
     database: 'BRIANE_APP',
+    options: {
+        "abortTransactionOnError": true,
+        "enableArithAbort": true,
+        "encrypt": false,
+        // "instanceName": "192.168.3.3:1433"
+    },
     connectionTimeout: 900000,
     requestTimeout: 900000,
     pool: {
@@ -70,6 +76,12 @@ var configServal = {
     server: '190.117.103.41',
     //port:
     database: 'FE_SUPERVAN',
+    options: {
+        "abortTransactionOnError": true,
+        "enableArithAbort": true,
+        "encrypt": false,
+        // "instanceName": "192.168.3.3:1433"
+    },
     connectionTimeout: 300000,
     requestTimeout: 300000,
     pool: {

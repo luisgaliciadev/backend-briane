@@ -2503,7 +2503,7 @@ app.get('/reportprodop/:id', mdAuthenticattion.verificarToken, (req, res, next )
 
 // Get validar nro guia
 app.get('/nroguia/:correlativo',mdAuthenticattion.verificarToken, (req, res, next ) => {   
-    var correlativo = req.params.correlativo;
+    var body = req.body;
     var params =  `'${correlativo}'`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_VALIDAR_NRO_GUIA ${params}`;
     var request = new mssql.Request();
@@ -2529,7 +2529,7 @@ app.get('/nroguia/:correlativo',mdAuthenticattion.verificarToken, (req, res, nex
         }
     });
 });
-// End Get alidar nro guia
+// End Get validar nro guia
 
 // Get validar nro guia conductor
 app.get('/nroguiacond/:correlativo/:dni',mdAuthenticattion.verificarToken, (req, res, next ) => {   
@@ -2560,6 +2560,69 @@ app.get('/nroguiacond/:correlativo/:dni',mdAuthenticattion.verificarToken, (req,
         }
     });
 });
-// End Get alidar nro guia conductor
+// End Get Validar nro guia conductor
+
+// Get guias contorl viajes
+app.get('/guiascontrolviajes/:idUser/:search/:desde/:hasta/:idZona', mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var idUser = req.params.idUser;
+    var search = req.params.search;
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var idZona = req.params.idZona;
+    var params =  `${idUser},'${search}','${desde}','${hasta}',${idZona}`;
+    var lsql = `EXEC GET_GUIAS_CONTROL_VIAJES ${params}`;
+    // console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guias = result.recordset;  
+            return res.status(200).send({
+                ok: true,
+                guias
+            });
+        }
+    });
+});
+// End Get guias
+
+// Update fecha control guia
+app.put('/fechacontrolguia',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var body = req.body;
+    var params =  `'${body.idGuia}','${body.fecha}',${body.idUser},${body.nroFecha}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_FECHA_CONTROL_GUIA ${params}`;
+    // console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guiaUpdate = result.recordset[0];
+            if(guiaUpdate) {
+                var idGuia = guiaUpdate.ID_GUIA;
+                if (!idGuia) {
+                    return res.status(400).send({
+                        ok: false,
+                        message: guiaUpdate.MESSAGE
+                    });
+                }
+            }
+            return res.status(200).send({
+                ok: true,
+                idGuia
+            });
+        }
+    });
+});
+// End Update fecha control guia
 
 module.exports = app;
