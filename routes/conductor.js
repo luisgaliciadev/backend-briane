@@ -1381,10 +1381,10 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
                                 var infoMail = '';
                                 var datosEnvio = {
                                     from: "BRIANE SMART <briane.smart@briane.pe>",
-                                    to: 'luis.galicia@supervan.pe',
-                                    // to: 'carlos.inocente@supervan.pe,nelly.anaya@supervan.pe,gabriela.napa@supervan.pe',
+                                    to: 'luis.galicia@supervan.pe,galicialuis@hotmail.es,luisgalic@gmail.com',
+                                    // to: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
                                     cc: 'luisgalic@gmail.com',
-                                    // cc: 'marlon.gutierrez@supervan.pe,gerty.guanilo@supervan.pe,freddy.herrera@supervan.pe',
+                                    // cc: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
                                     bcc: 'briane.smart@briane.pe',
                                     subject: 'Notificaciones BRIANE SMART',
                                     html: contentHtml
@@ -2048,9 +2048,9 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                 var datosEnvio = {
                     from: "BRIANE SMART <briane.smart@briane.pe>",
                     to: 'luis.galicia@supervan.pe',
-                    // to: 'marlon.gutierrez@supervan.pe,gerty.guanilo@supervan.pe,freddy.herrera@supervan.pe',
+                    // to: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
                     cc: 'luisgalic@gmail.com',
-                    // cc: 'carlos.inocente@supervan.pe,nelly.anaya@supervan.pe,gabriela.napa@supervan.pe',
+                    // cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
                     bcc: 'briane.smart@briane.pe',
                     subject: 'Notificaciones BRIANE SMART',
                     html: contentHtml
@@ -2263,6 +2263,9 @@ app.post('/notificarsaldos/:idUser', mdAuthenticattion.verificarToken, (req, res
             var infoMail = await transporter.sendMail({
                 from: "BRIANE SMART <briane.smart@briane.pe>",
                 to: 'luis.galicia@supervan.pe;',
+                // to: 'renzo.rodriguez@supervan.pe;richard.alfaro@supervan.pe',
+                cc: 'luisgalic@gmail.com',
+                // cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
                 bcc: 'briane.smart@briane.pe',
                 subject: 'Notificaciones BRIANE SMART',
                 html: contentHtml
@@ -2279,6 +2282,183 @@ app.post('/notificarsaldos/:idUser', mdAuthenticattion.verificarToken, (req, res
                     message: 'No se pudo enviar la notificación.'
                 });
             } 
+        }
+    });
+});
+// End notificar saldos peaje
+
+// Get peajes descuentos
+app.get('/peajesdescuentos/:desde/:hasta/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var search = req.params.search;
+    var params =  `'${desde}','${hasta}','${search}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_VIEW_OP_DETA_PEAJES_DESCUENTOS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var peajeDescuentos = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                peajeDescuentos
+            });
+        }
+    });  
+});
+// End Get peajes descuentos
+
+// Notificar saldos peaje
+app.post('/descontarsaldospeajes/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var body = req.body;
+    var idUser = req.params.idUser;
+    var params = '';
+    var detalle = '';
+    var i = 0;   
+    body.forEach(function (deta) {
+        i++;
+        params = params + ',' + '\n' + `(${deta.idDetaPeaje}, 1)`;
+        detalle = detalle + '\n' + `
+        <tr>                   
+            <td>${i}</td>
+            <td>${deta.nroSolicitudPeaje}</td>
+            <td>${deta.fechaSolicitudPeaje}</td>
+            <td>${deta.nroOrdenServicio}</td>
+            <td>${deta.conductor}</td>
+            <td>${deta.dni}</td>
+            <td>${deta.fechaPeaje}</td>
+            <td>${deta.montoPeaje}</td>
+            <td>${deta.saldo}</td> 
+        </tr>`;
+    });     
+    params = params.substring(1);   
+    var lsql = `UPDATE A SET A.FG_DESCONTADO = N.valor FROM FE_SUPERVAN.DBO.OP_DETA_PEAJES A JOIN (VALUES ${params}) N (idDeta, valor) ON A.ID_DETA_PEAJE = idDeta`;
+    var request = new mssql.Request();
+    request.query(lsql, async (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var descuento = result.rowsAffected[0];
+            if (descuento !== body.length) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No se pudo ralizar el descuento.'
+                });
+            }
+            // var css = `
+            // .table-peaje {
+            //     border-collapse: collapse;
+            //     border: 1px solid;
+            //     width: 500px;
+            // }
+            // .table-peaje td  {  
+            //     border: 1px solid;
+            //     text-align:center;
+            // }
+            // .table-detalle {
+            //     border-collapse: collapse;
+            //     border: 1px solid;
+            //     width: 100%
+            // }
+            // .table-detalle td {  
+            //     border: 1px solid;
+            //     text-align:center;
+            // }
+            // .table-detalle thead td {  
+            //     font-weight: bold;
+            //     background: #AEAEAE;
+            // }
+            // `;
+
+            // var contentHtml = `
+            // <style>
+            //     ${css}
+            // </style>
+            // <div>
+            //     <h2>Listado de conductores con saldos de peaje</h2>           
+            //     <table class="table-detalle">
+            //         <thead>
+            //             <tr>            
+            //                 <td>Item</td>          
+            //                 <td>Nro. Solicitud Peaje</td> 
+            //                 <td>Fecha Solicitud</td>
+            //                 <td>Nro. Orden Servicio</td>
+            //                 <td>Conductor</td>
+            //                 <td>DNI</td>
+            //                 <td>Fecha Peaje</td>
+            //                 <td>Monto S/</td>
+            //                 <td>Saldo S/</td>        
+            //             </tr>
+            //         </thead>
+            //         <tbody>
+            //             ${detalle}
+            //         </tbody>
+            //     </table>
+            // </div>
+            // `;
+            /////////////////////////////////////////////////////////
+            // Enviar correo              
+            // const transporter = nodemailer.createTransport({
+            //     host: 'briane.pe',
+            //     port: 465,
+            //     auth: {
+            //         user: 'briane.smart@briane.pe',
+            //         pass: 'Brian@2020'
+            //     },
+            // });            
+            // var infoMail = '';
+            // var datosEnvio = {
+            //     from: "BRIANE SMART <briane.smart@briane.pe>",
+            //     to: 'luis.galicia@supervan.pe',
+            //     bcc: 'briane.smart@briane.pe',
+            //     subject: 'Notificaciones BRIANE SMART',
+            //     html: contentHtml
+            // }
+            // transporter.sendMail(datosEnvio, function(error, info){
+            //     if (error) {
+            //         console.log('error:', error);
+            //     } else {
+            //         // console.log('info:', info);
+            //         infoMail = info.messageId
+            //     }
+            // });
+
+            // var infoMail = await transporter.sendMail({
+            //     from: "BRIANE SMART <briane.smart@briane.pe>",
+            //     to: 'luis.galicia@supervan.pe;',
+            //     // to: 'renzo.rodriguez@supervan.pe;richard.alfaro@supervan.pe',
+            //     cc: 'luisgalic@gmail.com',
+            //     // cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+            //     bcc: 'briane.smart@briane.pe',
+            //     subject: 'Notificaciones BRIANE SMART',
+            //     html: contentHtml
+            // });
+            // if (infoMail) {
+            //     return res.status(200).send({
+            //         ok: true,
+            //         notificacion,
+            //         infoMail: infoMail.messageId
+            //     });
+            // } else {
+            //     return res.status(400).send({
+            //         ok: false,
+            //         message: 'No se pudo enviar la notificación.'
+            //     });
+            // }
+            
+            return res.status(200).send({
+                ok: true,
+                descuento
+            });
         }
     });
 });
