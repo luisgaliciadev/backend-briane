@@ -1216,13 +1216,11 @@ app.get('/detaviaticoporconductor/:idViatico/:idConductor',mdAuthenticattion.ver
 });
 // End Get resumen viaticos por conductor
 
-
 // Register peaje
 app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
     var body = req.body;
     var peaje = body.peaje;
     var detaPeaje = body.detaPeaje;
-
     var params =  `${peaje.ID_ORDEN_SERVICIO},${peaje.CANT_REGISTROS},${peaje.MONTO_TOTAL},${peaje.ID_USUARIO_BS},'${peaje.OBSERVACION}'`;
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_PEAJE ${params}`;
     var request = new mssql.Request();
@@ -1236,8 +1234,14 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
         } else {
             var peajeRegistrado = result.recordset[0];
             var idPeaje = peajeRegistrado.ID_PEAJE;
-
             if (peajeRegistrado) {
+                if (!idPeaje) {
+                    return res.status(400).send({
+                        ok: false,
+                        message: peajeRegistrado.MESSAGE,
+                        error: err
+                    });
+                }
                 params = [];
                 detaPeaje.forEach(function (detalle) {
                     var arrayFecha = detalle.fecha.split('-');
@@ -1378,6 +1382,9 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
                                 var datosEnvio = {
                                     from: "BRIANE SMART <briane.smart@briane.pe>",
                                     to: 'luis.galicia@supervan.pe',
+                                    // to: 'carlos.inocente@supervan.pe,nelly.anaya@supervan.pe,gabriela.napa@supervan.pe',
+                                    cc: 'luisgalic@gmail.com',
+                                    // cc: 'marlon.gutierrez@supervan.pe,gerty.guanilo@supervan.pe,freddy.herrera@supervan.pe',
                                     bcc: 'briane.smart@briane.pe',
                                     subject: 'Notificaciones BRIANE SMART',
                                     html: contentHtml
@@ -1511,8 +1518,6 @@ app.get('/peajesaldos/:desde/:hasta/:search', mdAuthenticattion.verificarToken, 
     });  
 });
 // End Get peajes saldos
-
-
 
 // Update peaje
 app.put('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
@@ -1846,6 +1851,7 @@ app.put('/detapeaje/:idDeta/:valor/:idUser', mdAuthenticattion.verificarToken, (
     var idUser = req.params.idUser;
     var params =  `${idDeta}, ${valor},${idUser}`;
     var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_DETA_PEAJES_CONDUCTOR ${params}`;
+    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -2042,6 +2048,9 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                 var datosEnvio = {
                     from: "BRIANE SMART <briane.smart@briane.pe>",
                     to: 'luis.galicia@supervan.pe',
+                    // to: 'marlon.gutierrez@supervan.pe,gerty.guanilo@supervan.pe,freddy.herrera@supervan.pe',
+                    cc: 'luisgalic@gmail.com',
+                    // cc: 'carlos.inocente@supervan.pe,nelly.anaya@supervan.pe,gabriela.napa@supervan.pe',
                     bcc: 'briane.smart@briane.pe',
                     subject: 'Notificaciones BRIANE SMART',
                     html: contentHtml

@@ -1233,7 +1233,6 @@ function updateCantRegReportOp(idReportOp, idUser) {
 }
 // fin Actualizar cantidad de registros report OP
 
-
 // Update deta report OP
 app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.verificarToken, (req, res) => {
     var semana = req.params.semana;
@@ -2594,7 +2593,8 @@ app.get('/guiascontrolviajes/:idUser/:search/:desde/:hasta/:idZona', mdAuthentic
 // Update fecha control guia
 app.put('/fechacontrolguia',mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var body = req.body;
-    var params =  `'${body.idGuia}','${body.fecha}',${body.idUser},${body.nroFecha}`;
+    // console.log(body);
+    var params =  `'${body.idGuia}','${body.fecha}',${body.idUser},${body.nroFecha},${body.idMotivo}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_FECHA_CONTROL_GUIA ${params}`;
     // console.log(lsql);
     var request = new mssql.Request();
