@@ -1381,10 +1381,10 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
                                 var infoMail = '';
                                 var datosEnvio = {
                                     from: "BRIANE SMART <briane.smart@briane.pe>",
-                                    to: 'luis.galicia@supervan.pe,galicialuis@hotmail.es,luisgalic@gmail.com',
-                                    // to: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
-                                    cc: 'luisgalic@gmail.com',
-                                    // cc: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
+                                    // to: 'luis.galicia@supervan.pe,galicialuis@hotmail.es,luisgalic@gmail.com',
+                                    to: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+                                    // cc: 'luisgalic@gmail.com',
+                                    cc: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
                                     bcc: 'briane.smart@briane.pe',
                                     subject: 'Notificaciones BRIANE SMART',
                                     html: contentHtml
@@ -2047,10 +2047,10 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                 var infoMail = '';
                 var datosEnvio = {
                     from: "BRIANE SMART <briane.smart@briane.pe>",
-                    to: 'luis.galicia@supervan.pe',
-                    // to: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
-                    cc: 'luisgalic@gmail.com',
-                    // cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+                    // to: 'luis.galicia@supervan.pe',
+                    to: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
+                    // cc: 'luisgalic@gmail.com',
+                    cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
                     bcc: 'briane.smart@briane.pe',
                     subject: 'Notificaciones BRIANE SMART',
                     html: contentHtml
@@ -2244,13 +2244,13 @@ app.post('/notificarsaldos/:idUser', mdAuthenticattion.verificarToken, (req, res
                 },
             });            
             var infoMail = '';
-            var datosEnvio = {
-                from: "BRIANE SMART <briane.smart@briane.pe>",
-                to: 'luis.galicia@supervan.pe',
-                bcc: 'briane.smart@briane.pe',
-                subject: 'Notificaciones BRIANE SMART',
-                html: contentHtml
-            }
+            // var datosEnvio = {
+            //     from: "BRIANE SMART <briane.smart@briane.pe>",
+            //     to: 'luis.galicia@supervan.pe',
+            //     bcc: 'briane.smart@briane.pe',
+            //     subject: 'Notificaciones BRIANE SMART',
+            //     html: contentHtml
+            // }
             // transporter.sendMail(datosEnvio, function(error, info){
             //     if (error) {
             //         console.log('error:', error);
@@ -2262,10 +2262,10 @@ app.post('/notificarsaldos/:idUser', mdAuthenticattion.verificarToken, (req, res
 
             var infoMail = await transporter.sendMail({
                 from: "BRIANE SMART <briane.smart@briane.pe>",
-                to: 'luis.galicia@supervan.pe;',
-                // to: 'renzo.rodriguez@supervan.pe;richard.alfaro@supervan.pe',
-                cc: 'luisgalic@gmail.com',
-                // cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+                // to: 'luis.galicia@supervan.pe;',
+                to: 'renzo.rodriguez@supervan.pe;richard.alfaro@supervan.pe',
+                // cc: 'luisgalic@gmail.com',
+                cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
                 bcc: 'briane.smart@briane.pe',
                 subject: 'Notificaciones BRIANE SMART',
                 html: contentHtml
