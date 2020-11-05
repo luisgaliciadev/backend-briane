@@ -61,8 +61,6 @@ app.get('/viajeshorascomision/:desde/:hasta/:dni/:search/:zona', mdAuthenticatti
             viajes.forEach(function (viaje) {
                 comisionTotalViajes = comisionTotalViajes + viaje.ComisionImporte;
             });
-               
-
             return res.status(200).send({
                 ok: true, 
                 cantHorasProducidas: 0,
@@ -101,8 +99,6 @@ app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', (req, res) => {
             viajes.forEach(function (viaje) {
                 comisionTotalViajes = comisionTotalViajes + viaje.TARIFA;
             });
-               
-
             return res.status(200).send({
                 ok: true, 
                 cantHorasProducidas: 0,
@@ -292,7 +288,6 @@ app.get('/datosemana/:dia', (req, res, next ) => {
                 ok: true,
                 datosSemana: datosSemana[0]
             });
-            
         }
     });
 });
@@ -317,8 +312,7 @@ app.get('/diasemana/:desde/:hasta', (req, res, next ) => {
             return res.status(200).send({
                 ok: true,
                 diasSemana
-            });
-            
+            });   
         }
     });
 });
@@ -386,7 +380,6 @@ app.post('/viatico/:semana/:year/:zona/:montoTotal/:idUser', mdAuthenticattion.v
                                 fgViaje1 = viatico.dia1.fgViaje1;
                                 fgViaje2 = viatico.dia1.fgViaje2;
                                 fgViaje3 = viatico.dia1.fgViaje3;
-
                             }
                             if (i==2) {    
                                 turno1 = viatico.dia2.turno1;
@@ -546,7 +539,6 @@ app.put('/viatico/:semana/:year/:zona/:montoTotal/:id/:nroDia/:idUser', mdAuthen
     var idViatico = req.params.id;
     var idUser = req.params.idUser;
     var i = parseInt(req.params.nroDia);
-
     var params =  `${idViatico}, ${montoTotal}, ${idUser}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_VIATICO_CONDUCTOR ${params}`;   
     var request = new mssql.Request();
@@ -692,7 +684,6 @@ app.put('/viatico/:semana/:year/:zona/:montoTotal/:id/:nroDia/:idUser', mdAuthen
     });
 });
 // End Update Viatico
-
 
 // Get Viaticos
 app.get('/viaticos/:desde/:hasta/:search',mdAuthenticattion.verificarToken, (req, res, next ) => {       
@@ -1707,10 +1698,6 @@ app.post('/peajefact', mdAuthenticattion.verificarToken, (req, res, next ) => {
             }
         }
     });  
-    // return res.status(200).send({
-    //     ok: true,                             
-    //     factura
-    // });
 });
 // End Register peaje factura
 
@@ -1736,7 +1723,6 @@ app.post('/peajefactapp', mdAuthenticattion.verificarToken, (req, res, next ) =>
             });
         } else {
             var peajeFactura = result.recordset[0];
-            // console.log('peajeFactura', peajeFactura);
             if (peajeFactura) {
                 var idRelacionPeajes = peajeFactura.ID_RELACION_PEAJES;
                 if (!idRelacionPeajes) {
@@ -1752,10 +1738,6 @@ app.post('/peajefactapp', mdAuthenticattion.verificarToken, (req, res, next ) =>
             }
         }
     });  
-    // return res.status(200).send({
-    //     ok: true,                             
-    //     factura
-    // });
 });
 // End Register peaje factura app
 
@@ -1851,7 +1833,6 @@ app.put('/detapeaje/:idDeta/:valor/:idUser', mdAuthenticattion.verificarToken, (
     var idUser = req.params.idUser;
     var params =  `${idDeta}, ${valor},${idUser}`;
     var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_DETA_PEAJES_CONDUCTOR ${params}`;
-    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1869,15 +1850,6 @@ app.put('/detapeaje/:idDeta/:valor/:idUser', mdAuthenticattion.verificarToken, (
                     message: detaPeaje.MESSAGE
                 });
             }
-            // return res.status(200).send({
-            //     ok: true,
-            //     detaPeajes
-            // });
-            // var detaPeaje = result.recordset[0];   
-            // return res.status(200).send({
-            //     ok: true,
-            //     detaPeaje
-            // });
         }
     });  
 });
@@ -2063,32 +2035,6 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                         infoMail = info.messageId
                     }
                 });
-
-                // const transporter = nodemailer.createTransport({
-                //     host: 'smtp.office365.com',
-                //     port: 587,
-                //     secureConnection: false,
-                //     tls: { ciphers: 'SSLv3' },
-                //     auth: {                        
-                //         user: 'luis.galicia@supervan.pe',
-                //         pass: 'Gals*368'
-                //     },
-                // });
-                // var infoMail = '';
-                // var datosEnvio = {
-                //     from: "BRIANE SMART <luis.galicia@supervan.pe>",
-                //     to: 'luis.galicia@supervan.pe',
-                //     subject: 'Notificaciones BRIANE SMART',
-                //     html: contentHtml
-                // }
-                // transporter.sendMail(datosEnvio, function(error, info){
-                //     if (error) {
-                //         console.log('error:', error);
-                //     } else {
-                //         // console.log('info:', info);
-                //         infoMail = info.messageId
-                //     }
-                // });
                 // FIN ENVIAR CORREO
                 ////////////////////////////////////////////////////////////
                 return res.status(200).send({

@@ -576,7 +576,6 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
             var cantRegistros = body.length;
             var params =  `${semana}, ${year}, ${zona}, '${fhDesde}', '${fhHasta}', ${cantRegistros}, ${idUser}`;             
             lsql = `EXEC FE_SUPERVAN.DBO.SP_REG_REPORT_PRODUCTIVIDAD ${params}`;  
-            // console.log(lsql);
             var request = new mssql.Request();
             request.query(lsql, (err, result) => {
                 if (err) { 
@@ -1190,11 +1189,6 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
             params = params.substring(1);
             var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_REPORT_PRODUCTIVIDAD (ID_CONDUCTOR,ID_TRACTO,ANIO,NRO_SEMANA,FECHA,TURNO1,TURNO2,TURNO3,MOTIVO1,MOTIVO2,MOTIVO3,ID_ZONA,ID_REPORT_PRO_OP,ID_USUARIO_BS) 
             VALUES ${params}`;
-            // console.log(lsql);
-            // return res.status(200).send({
-            //     ok: true,                             
-            //     body
-            // });
             var request = new mssql.Request();
             request.query(lsql, (err, result) => {
                 if (err) {                       
@@ -2096,11 +2090,6 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
             });
             var lsql = `${params}
             SELECT ${cantRegistros} as registrosAct`;
-            // console.log(lsql);
-            // return res.status(200).send({
-            //     ok: true,                             
-            //     cantRegistros
-            // });
             var request = new mssql.Request();
             request.query(lsql, (err, result) => {
                 if (err) { 
@@ -2570,7 +2559,6 @@ app.get('/guiascontrolviajes/:idUser/:search/:desde/:hasta/:idZona', mdAuthentic
     var idZona = req.params.idZona;
     var params =  `${idUser},'${search}','${desde}','${hasta}',${idZona}`;
     var lsql = `EXEC GET_GUIAS_CONTROL_VIAJES ${params}`;
-    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -2593,10 +2581,8 @@ app.get('/guiascontrolviajes/:idUser/:search/:desde/:hasta/:idZona', mdAuthentic
 // Update fecha control guia
 app.put('/fechacontrolguia',mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var body = req.body;
-    // console.log(body);
     var params =  `'${body.idGuia}','${body.fecha}',${body.idUser},${body.nroFecha},${body.idMotivo}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_FECHA_CONTROL_GUIA ${params}`;
-    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -2618,11 +2604,107 @@ app.put('/fechacontrolguia',mdAuthenticattion.verificarToken, (req, res, next ) 
             }
             return res.status(200).send({
                 ok: true,
-                idGuia
+                guiaUpdate
             });
         }
     });
 });
 // End Update fecha control guia
+
+// Update linea fechas control guia
+app.put('/lineafechacontrolguia',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var body = req.body; 
+    var params =  `${body.idGuia},'${body.fhInicioViaje}','${body.fhLlegadaPc}','${body.fhIngresoPc}','${body.fhSalidaPc}','${body.fhLlegadaPd}','${body.fhIngresoPd}','${body.fhSalidaPd}','${body.fhFinViaje}','${body.idMotivo}',${body.idUser}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_LINEA_FECHA_CONTROL_GUIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guiaUpdate = result.recordset[0];
+            if(guiaUpdate) {
+                var idGuia = guiaUpdate.ID_GUIA;
+                if (!idGuia) {
+                    return res.status(400).send({
+                        ok: false,
+                        message: guiaUpdate.MESSAGE
+                    });
+                }
+            }
+            return res.status(200).send({
+                ok: true,
+                guiaUpdate
+            });
+        }
+    });
+});
+// End Update linea fechas control guia
+
+// Update fechas control guia
+app.put('/fechascontrolguia',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var body = req.body; 
+    var params = '';
+    body.forEach(function (guia) {
+        params = params + ',' + '\n' + `(${guia.idGuia},'${guia.fhInicioViaje}','${guia.fhLlegadaPc}', '${guia.fhIngresoPc}','${guia.fhSalidaPc}','${guia.fhLlegadaPd}','${guia.fhIngresoPd}','${guia.fhSalidaPd}','${guia.fhFinViaje}',${guia.idMotivo})`;
+    });     
+    params = params.substring(1);   
+    var lsql = `UPDATE A SET 
+    A.FH_INICIO_VIAJE = N.FH_INICIO_VIAJE,
+    A.FH_LLEGADA_PC = N.FH_LLEGADA_PC,
+    A.FH_INGRESO_PC = N.FH_INGRESO_PC,
+    A.FH_SALIDA_PC = N.FH_SALIDA_PC,
+    A.FH_LLEGADA_PD = N.FH_LLEGADA_PD,
+    A.FH_INGRESO_PD = N.FH_INGRESO_PD,
+    A.FH_SALIDA_PD = N.FH_SALIDA_PD,
+    A.FH_FIN_VIAJE = N.FH_FIN_VIAJE,
+    A.ID_MOTIVO_OP = N.ID_MOTIVO_OP
+    FROM FE_SUPERVAN.DBO.OP_GUIA_DESPACHO A JOIN 
+    (VALUES ${params}) 
+    N 
+    (ID_GUIA,
+    FH_INICIO_VIAJE,
+    FH_LLEGADA_PC,
+    FH_INGRESO_PC,
+    FH_SALIDA_PC,
+    FH_LLEGADA_PD,
+    FH_INGRESO_PD,
+    FH_SALIDA_PD,
+    FH_FIN_VIAJE,
+    ID_MOTIVO_OP) ON A.ID_GUIA = ID_GUIA`;
+    return res.status(200).send({
+        ok: true
+    });
+    
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guiaUpdate = result.recordset[0];
+            if(guiaUpdate) {
+                var idGuia = guiaUpdate.ID_GUIA;
+                if (!idGuia) {
+                    return res.status(400).send({
+                        ok: false,
+                        message: guiaUpdate.MESSAGE
+                    });
+                }
+            }
+            return res.status(200).send({
+                ok: true,
+                guiaUpdate
+            });
+        }
+    });
+});
+// End Update fechas control guia
 
 module.exports = app;
