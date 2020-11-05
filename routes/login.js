@@ -33,7 +33,7 @@ const client = new OAuth2Client(CLIENT_ID);
 
 // Renew Token
 app.get('/renewtoken', mdAuthenticattion.verificarToken, (req, res) => {
-    var token = jwt.sign({ user: req.user }, SEED, { expiresIn: 43200 }) // expira en 4 horas
+    var token = jwt.sign({ user: req.user }, SEED, { expiresIn: 86400 }) // expira en 24 horas
     return res.status(200).send({
         ok: true,
         mensaje: 'New Token!!',
@@ -92,7 +92,7 @@ app.post('/google', async(req, res) => {
                         message: 'Debe usar su autenticación normal.'
                     });
                 } else {
-                    var token = jwt.sign({ user: userLogin[0] }, SEED, { expiresIn: 43200 }); // expira en 4 horas
+                    var token = jwt.sign({ user: userLogin[0] }, SEED, { expiresIn: 86400 }); // expira en 4 horas
 
                     // Get Menu
                     var id_role = userLogin[0].ID_ROLE;
@@ -147,7 +147,7 @@ app.post('/google', async(req, res) => {
                                 message: userRegister[0].MESSAGE
                             });
                         } else {
-                            var token = jwt.sign({ user: userRegister[0] }, SEED, { expiresIn: 43200 }); // expira en 4 horas
+                            var token = jwt.sign({ user: userRegister[0] }, SEED, { expiresIn: 86400 }); // expira en 4 horas
 
                             // Get Menu
                             var id_role = userRegister[0].ID_ROLE;
@@ -213,7 +213,7 @@ app.post('/', (req, res) => {
                 } else {
                     // Create token
                     userLogin[0].PASSWORD = null;
-                    var token = jwt.sign({ user: userLogin }, SEED, { expiresIn: 43200 }); // expira en 4 horas
+                    var token = jwt.sign({ user: userLogin }, SEED, { expiresIn: 86400 }); // expira en 4 horas
 
                     // Get Menu
                     var id_role = userLogin[0].ID_ROLE;
@@ -269,7 +269,7 @@ app.post('/conductor', (req, res) => {
                 });
             } else {               
                 // Create token
-                var token = jwt.sign({ user: userLogin }, SEED, { expiresIn: 43200 }); // expira en 4 horas
+                var token = jwt.sign({ user: userLogin }, SEED, { expiresIn: 86400 }); // expira en 4 horas
 
                 return res.status(200).send({
                     ok: true,
