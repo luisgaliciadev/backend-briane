@@ -102,6 +102,9 @@ app.post('/guia', mdAuthenticattion.verificarToken, (req, res) => {
     var ID_TRACTO = body.ID_TRACTO;
     var NRO_GUIA_CLIENTE = body.NRO_GUIA_CLIENTE;
     var NRO_PERMISO = body.NRO_PERMISO;
+    if (NRO_PERMISO === '') {
+        NRO_PERMISO = '-';
+    }
     var OBSERVACION = body.OBSERVACION;
     var PESO_BRUTO = body.PESO_BRUTO;
     var PESO_NETO = body.PESO_NETO;

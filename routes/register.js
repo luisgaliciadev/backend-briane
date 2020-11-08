@@ -635,6 +635,101 @@ app.get('/diasferiado', (req, res, next ) => {
 });
 // End Get Dia feriado
 
+// Get CLASIFICACION_DOCUMENTOS_BRIANE
+app.get('/clasificaciondocbriane', (req, res, next ) => {
+    var lsql = `EXEC GET_CLASIFICACION_DOCUMENTOS_BRIANE`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var clasificacionDocumentos = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                clasificacionDocumentos
+            });
+        }
+    });
+});
+// End Get CLASIFICACION_DOCUMENTOS_BRIANE
+
+// Get CATEGORIA_DOCUMENTOS_BRIANE
+app.get('/categoriadocbriane/:idClasificacion', (req, res, next ) => {
+    var idClasificacion = req.params.idClasificacion;
+    var params = `'${idClasificacion}'`; 
+    var lsql = `EXEC GET_CATEGORIA_DOCUMENTOS_BRIANE ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var categoriaDocumenos = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                categoriaDocumenos
+            });
+        }
+    });
+});
+// End Get CATEGORIA_DOCUMENTOS_BRIANE
+
+// Get AREA_BRIANE
+app.get('/areasbriane', (req, res, next ) => {
+    var lsql = `EXEC GET_AREA_BRIANE`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var areasBriane = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                areasBriane
+            });
+        }
+    });
+});
+// End Get AREA_BRIANE
+
+// Get DOCUMENTOS_BRIANE
+app.get('/documentosbriane/:idClasificacion/:idCategoria/:idArea', (req, res, next ) => {
+    var idClasificacion = req.params.idClasificacion;
+    var idCategoria = req.params.idCategoria;
+    var idArea = req.params.idArea;
+    var params = `${idClasificacion},${idCategoria},${idArea}`; 
+    var lsql = `EXEC GET_DOCUMENTOS_BRIANE ${params}`;
+    // console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentosBriane = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                documentosBriane
+            });
+        }
+    });
+});
+// End Get DOCUMENTOS_BRIANE
+
 // REGISTER
 ////////////////////////////////////////////////////////////////////////////////
 
