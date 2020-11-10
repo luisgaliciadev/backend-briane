@@ -2582,7 +2582,7 @@ app.get('/guiascontrolviajes/:idUser/:search/:desde/:hasta/:idZona', mdAuthentic
 // End Get guias
 
 // Update fecha control guia
-app.put('/fechacontrolguia', (req, res, next ) => {   
+app.put('/fechacontrolguia', mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var body = req.body;
     var params =  `'${body.idGuia}','${body.fecha}',${body.idUser},${body.nroFecha},${body.idMotivo}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_FECHA_CONTROL_GUIA ${params}`;
@@ -2615,7 +2615,7 @@ app.put('/fechacontrolguia', (req, res, next ) => {
 // End Update fecha control guia
 
 // Update linea fechas control guia
-app.put('/lineafechacontrolguia', (req, res, next ) => {   
+app.put('/lineafechacontrolguia', mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var body = req.body; 
     var params =  `${body.idGuia},'${body.fhInicioViaje}','${body.fhLlegadaPc}','${body.fhIngresoPc}','${body.fhSalidaPc}','${body.fhLlegadaPd}','${body.fhIngresoPd}','${body.fhSalidaPd}','${body.fhFinViaje}','${body.idMotivo}',${body.idUser}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_LINEA_FECHA_CONTROL_GUIA ${params}`;
