@@ -2710,4 +2710,29 @@ app.put('/fechascontrolguia',mdAuthenticattion.verificarToken, (req, res, next )
 });
 // End Update fechas control guia
 
+// Get tiempo tardanza viaje
+app.get('/tiempotardanzaviaje/:iniciViaje/:idTracto', mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var iniciViaje = req.params.iniciViaje;
+    var idTracto = req.params.idTracto;
+    var params =  `'${iniciViaje}',${idTracto}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_TIEMPO_TARDANZA_CONTROL_VIAJES ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var datosTiempo = result.recordset[0];  
+            return res.status(200).send({
+                ok: true,
+                datosTiempo
+            });
+        }
+    });
+});
+// End Get tiempo tardanza viaje
+
 module.exports = app;
