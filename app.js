@@ -52,8 +52,9 @@ var config = {
     user: 'sa',
     // driver='tedious',
     password: 'Cybersac1',
-    server: '190.117.103.41',
-    //port:
+    // server: '190.117.103.41',
+    server: '66.23.235.30',
+    port: 10000,
     database: 'BRIANE_APP',
     options: {
         "abortTransactionOnError": true,
@@ -73,8 +74,9 @@ var configServal = {
     user: 'sa',
     // driver='tedious',
     password: 'Cybersac1',
-    server: '190.117.103.41',
-    //port:
+    // server: '190.117.103.41',
+    server: '66.23.235.30',
+    port: 10000,
     database: 'FE_SUPERVAN',
     options: {
         "abortTransactionOnError": true,

@@ -329,6 +329,7 @@ app.get('/diasproductividadop/:semana/:year/:zona',mdAuthenticattion.verificarTo
     var zona = req.params.zona;
     var params =  `${semana},${year},${zona}`;   
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIAJES_DIA ${params}`;
+    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 

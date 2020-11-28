@@ -457,7 +457,6 @@ app.post('/denuncia', (req, res, next ) => {
     var ARCHIVO2 = body.archivo2;
     var ARCHIVO3 = body.archivo3;
 
-    
     var params = `'${TITULO}', '${DESCRIPCION}', ${FG_EMPLEADO}, ${FG_ANONIMATO}, '${NOMBRES}', '${APELLIDOS}', '${TELEFONO}', '${CORREO}', '${HORA_CONTACTO}', '${PERSONAS_INVOLUCRADAS}'`;
        
     var lsql = `EXEC REGISTER_DENUNCIA ${params}`;
@@ -729,6 +728,386 @@ app.get('/documentosbriane/:idClasificacion/:idCategoria/:idArea', (req, res, ne
     });
 });
 // End Get DOCUMENTOS_BRIANE
+
+// Get EMPLEADOS GENESYS
+app.get('/empleadosrrhhgenesys/:fechaContrato',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var fechaContrato = req.params.fechaContrato;
+    var params = `'${fechaContrato}'`; 
+    var lsql = `EXEC GET_PERSONAL_RRHH_GENESYS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var empleados = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                empleados
+            });
+        }
+    });
+});
+// End Get DOCUMENTOS_BRIANE
+
+// Gets EMPLEADOS GENESYS BAJAS
+app.get('/empleadosrrhhgenesysbajas/:fechaContrato',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var fechaContrato = req.params.fechaContrato;
+    var params = `'${fechaContrato}'`; 
+    var lsql = `EXEC GET_PERSONAL_RRHH_GENESYS_BAJAS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var empleados = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                empleados
+            });
+        }
+    });
+});
+// End Get EMPLEADOS GENESYS BAJAS
+
+// Get monedas
+app.get('/monedas',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_MONEDAS`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var monedas = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                monedas
+            });
+        }
+    });
+});
+// End Get monedas
+
+// Get tipo cobros ordenes servicio
+app.get('/tipocobrosos',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_TIPO_COBROS_OS`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var tipoCobrosOs = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                tipoCobrosOs
+            });
+        }
+    });
+});
+// End Get tipo cobros ordenes servicio
+
+
+// Get clientes proveedores
+app.get('/clientes',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_CLIENTES_PROVEEDORES`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var clientes = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                clientes
+            });
+        }
+    });
+});
+// End Get clientes proveedores
+
+// Get origenes-destinos
+app.get('/origenesdestinos/:fgDestino',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var fgDestino = req.params.fgDestino;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_ORIGENES_DESTINOS ${fgDestino}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var origenesDestinos = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                origenesDestinos
+            });
+        }
+    });
+});
+// End Get origenes-destinos
+
+// Get tipo de carga
+app.get('/tipocargas',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_TIPO_CARGAS`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var tipoCargas = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                tipoCargas
+            });
+        }
+    });
+});
+// End Get tipo carga
+
+// Get productos
+app.get('/productos',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_PRODUCTOS`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var productos = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                productos
+            });
+        }
+    });
+});
+// End Get productos
+
+// Register ruta
+app.post('/ruta', (req, res, next ) => {
+    var body = req.body;     
+    var params = `'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_RUTA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ruta = result.recordset[0];
+            if (!ruta.ID_RUTA) {
+                return res.status(400).send({
+                    ok: false,
+                    message: ruta.MESSAGE
+                });
+            }        
+            return res.status(200).send({
+                ok: true,
+                ruta
+            });  
+        }
+    });
+});
+// End Register ruta
+
+// Get ruta
+app.get('/ruta/:idRuta',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var idRuta = req.params.idRuta;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_RUTA ${idRuta}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ruta = result.recordset[0];
+            if (!ruta) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existe la ruta.'
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                ruta
+            });
+        }
+    });
+});
+// End Get ruta
+
+// Get rutas
+app.get('/rutas/:search',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var search = req.params.search;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_RUTAS '${search}'`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var rutas = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                rutas
+            });
+        }
+    });
+});
+// End Get rutas
+
+// Update ruta
+app.put('/ruta', (req, res, next ) => {
+    var body = req.body;     
+    var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_RUTA ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ruta = result.recordset[0];
+            if (!ruta) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existe la ruta.'
+                });
+            }     
+
+            if (!ruta.ID_RUTA) {
+                return res.status(400).send({
+                    ok: false,
+                    message: ruta.MESSAGE
+                });
+            }        
+            return res.status(200).send({
+                ok: true,
+                ruta
+            });  
+        }
+    });
+});
+// End Update ruta
+
+// Delete ruta
+app.delete('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
+    var idRuta = req.params.idRuta;  
+    var idUsuario = req.params.idUsuario;    
+    var params = `${idRuta},${idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_RUTA ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ruta = result.recordset[0];
+            if (!ruta) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existe la ruta.'
+                });
+            }     
+
+            if (!ruta.ID_RUTA) {
+                return res.status(400).send({
+                    ok: false,
+                    message: ruta.MESSAGE
+                });
+            }        
+            return res.status(200).send({
+                ok: true,
+                ruta
+            });  
+        }
+    });
+});
+// End Delete ruta
+
+// Aprobar ruta
+app.put('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
+    var idRuta = req.params.idRuta;  
+    var idUsuario = req.params.idUsuario;    
+    var params = `${idRuta},${idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_APROBAR_RUTA ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ruta = result.recordset[0];
+            if (!ruta) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existe la ruta.'
+                });
+            }     
+
+            if (!ruta.ID_RUTA) {
+                return res.status(400).send({
+                    ok: false,
+                    message: ruta.MESSAGE
+                });
+            }        
+            return res.status(200).send({
+                ok: true,
+                ruta
+            });  
+        }
+    });
+});
+// End Aprobar ruta
 
 // REGISTER
 ////////////////////////////////////////////////////////////////////////////////
