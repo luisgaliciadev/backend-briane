@@ -262,6 +262,47 @@ app.put('/password/:id', mdAuthenticattion.verificarToken, (req, res, next ) => 
 });
 // End Update Password User
 
+// Update Password User-ADMIN
+app.put('/updatepassword/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var id = req.params.id;
+    var body = req.body;
+    var password = bcrypt.hashSync(body.PASSWORD, 10);
+    var params = `${id}, '${password}'`;
+    var request = new mssql.Request();
+    var lsql = `EXEC UPDATE_PASSWORD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var userUpdated = result.recordset;
+            if (userUpdated.length === 0) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'Usuario no registrado.'
+                });
+            } else {
+                if (userUpdated[0].ID_USER ===0) {
+                    return res.status(400).send({
+                        ok: true,
+                        message: userUpdated[0].MESSAGE
+                    });
+                } else {
+                    return res.status(200).send({
+                        ok: true,
+                        user: userUpdated[0]
+                    });
+                }
+            }
+        }
+    });
+});
+// End Update Password User-ADMIN
+
 // Delete User
 app.delete('/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var id = req.params.id;
