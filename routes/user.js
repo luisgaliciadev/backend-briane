@@ -15,6 +15,7 @@ var mssql = require('mssql');
 var bodyParser = require('body-parser');
 var http = require('http');
 var path = require('path');
+const fs = require('fs');
 
 var app = express();
 
@@ -343,6 +344,17 @@ app.get('/agendatelefonica/:search',mdAuthenticattion.verificarToken, (req, res,
             });
         } else {
             var agendas = result.recordset;
+            var i = 0;
+            agendas.forEach(function (agenda) {
+                if (agenda.foto) {
+                    let base64data = agenda.foto.toString('base64');               
+                    agendas[i].foto = base64data;
+                } else {
+                    agendas[i].foto = null;
+                }
+                i++;
+            });
+            
             return res.status(200).send({
                 ok: true,
                 agendas
@@ -351,7 +363,6 @@ app.get('/agendatelefonica/:search',mdAuthenticattion.verificarToken, (req, res,
     });
 });
 // End Get agenda telefonica gesnsys
-
 
 // User 
 //////////////////////////////////////////////////////////////////////////////////////////////////

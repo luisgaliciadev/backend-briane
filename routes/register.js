@@ -917,7 +917,7 @@ app.post('/ruta', (req, res, next ) => {
     var params = `'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_RUTA ${params}`;
     var request = new mssql.Request();
-    request.query(lsql, (err, result) => {
+    request.query(lsql,  (err, result) => {
         if (err) { 
             return res.status(500).send({
                 ok: false,
@@ -931,11 +931,67 @@ app.post('/ruta', (req, res, next ) => {
                     ok: false,
                     message: ruta.MESSAGE
                 });
-            }        
-            return res.status(200).send({
-                ok: true,
-                ruta
-            });  
+            }
+            
+            // Registrar detalles tipo carga
+            params = [];
+            body.DETA_TIPO_CARGAS.forEach(function (detalle) {                
+                params = params + ',' + '\n' + `(${detalle.ID_TIPO_CARGA},${ruta.ID_RUTA})`;
+            });
+            params = params.substring(1);
+            var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_RUTA_TIPO_CARGA (ID_TIPO_CARGA,ID_RUTA) 
+            VALUES ${params}`;
+            var request = new mssql.Request();
+            request.query(lsql, (err, result) => {
+                if (err) { 
+                    return res.status(500).send({
+                        ok: false,
+                        message: 'Error en la petición.',
+                        error: err
+                    });
+                } else {
+                    var cantDetaTipoCargas = result.rowsAffected[0];
+                    if (!cantDetaTipoCargas) {
+                        return res.status(500).send({
+                            ok: false,
+                            message: 'Error en la petición. No pudieron registrar los tipo de cargas relacionados.',
+                            error: err
+                        });
+                    }
+                    // Registrar deta ruta productos
+                    params = [];
+                    body.DETA_PRODUCTOS.forEach(function (detalle) {                
+                        params = params + ',' + '\n' + `(${detalle.ID_PRODUCTO},${ruta.ID_RUTA})`;
+                    });
+                    params = params.substring(1);
+                    var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_RUTA_PRODUCTO (ID_PRODUCTO,ID_RUTA) 
+                    VALUES ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var cantDetaProductos = result.rowsAffected[0];
+                            if (!cantDetaProductos) {
+                                return res.status(500).send({
+                                    ok: false,
+                                    message: 'Error en la petición. No pudieron registrar los productos relacionados.',
+                                    error: err
+                                });
+                            }
+                            return res.status(200).send({
+                                ok: true,
+                                ruta
+                            });
+                        }
+                    });  
+                    
+                }
+            });
         }
     });
 });
@@ -970,6 +1026,52 @@ app.get('/ruta/:idRuta',mdAuthenticattion.verificarToken, (req, res, next ) => {
 });
 // End Get ruta
 
+// Get deta ruta tipo cargas
+app.get('/detarutatipocargas/:idRuta',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var idRuta = req.params.idRuta;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_DETA_RUTA_TIPO_CARGAS ${idRuta}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaTipoCargas = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                detaTipoCargas
+            });
+        }
+    });
+});
+// End Get deta ruta tipo cargas
+
+// Get deta ruta productos
+app.get('/detarutaproductos/:idRuta',mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var idRuta = req.params.idRuta;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_DETA_RUTA_PRODUCTOS ${idRuta}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaProductos = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                detaProductos
+            });
+        }
+    });
+});
+// End Get deta ruta productos
+
 // Get rutas
 app.get('/rutas/:search',mdAuthenticattion.verificarToken, (req, res, next ) => {    
     var search = req.params.search;
@@ -998,7 +1100,6 @@ app.put('/ruta', (req, res, next ) => {
     var body = req.body;     
     var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_RUTA ${params}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1037,7 +1138,6 @@ app.delete('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
     var idUsuario = req.params.idUsuario;    
     var params = `${idRuta},${idUsuario}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_RUTA ${params}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1069,6 +1169,112 @@ app.delete('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
     });
 });
 // End Delete ruta
+
+// Register deta ruta tipo carga
+app.post('/detarutatipocarga/:idTipoCarga/:idRuta/:idUsuario', (req, res, next ) => {
+    var idTipoCarga = req.params.idTipoCarga;  
+    var idRuta = req.params.idRuta;  
+    var idUsuario = req.params.idUsuario;    
+    var params = `${idTipoCarga},${idRuta},${idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_OP_DETA__RUTA_TIPO_CARGA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaRutaTipoCarga = result.recordset[0];
+            return res.status(200).send({
+                ok: true,
+                detaRutaTipoCarga
+            });  
+        }
+    });
+});
+// End register deta ruta tipo carga
+
+// Register deta ruta producto
+app.post('/detarutaproducto/:idProducto/:idRuta/:idUsuario', (req, res, next ) => {
+    var idProducto = req.params.idProducto;  
+    var idRuta = req.params.idRuta;  
+    var idUsuario = req.params.idUsuario;    
+    var params = `${idProducto},${idRuta},${idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_OP_DETA_RUTA_PRODUCTO ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaRutaProducto = result.recordset[0];
+            return res.status(200).send({
+                ok: true,
+                detaRutaProducto
+            });  
+        }
+    });
+});
+// End register deta ruta tipo carga
+
+// Delete deta ruta tipo carga
+app.delete('/detarutatipocarga/:idDeta/:idUsuario', (req, res, next ) => {
+    var idDeta = req.params.idDeta;  
+    var idUsuario = req.params.idUsuario;    
+    var params = `${idDeta},${idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_OP_DETA_RUTA_TIPO_CARGA ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaRutaTipoCarga = result.recordset[0];
+            return res.status(200).send({
+                ok: true,
+                detaRutaTipoCarga
+            });  
+        }
+    });
+});
+// End delete deta ruta tipo carga
+
+
+
+// Delete deta ruta producto
+app.delete('/detarutaproducto/:idDeta/:idUsuario', (req, res, next ) => {
+    var idDeta = req.params.idDeta;  
+    var idUsuario = req.params.idUsuario;    
+    var params = `${idDeta},${idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_OP_DETA_RUTA_PRODUCTO ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaRutaProducto = result.recordset[0];
+            return res.status(200).send({
+                ok: true,
+                detaRutaProducto
+            });  
+        }
+    });
+});
+// End delete deta ruta producto
 
 // Aprobar ruta
 app.put('/ruta/:idRuta/:idUsuario', (req, res, next ) => {

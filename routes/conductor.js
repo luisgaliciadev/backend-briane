@@ -1580,7 +1580,7 @@ app.post('/detapeaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
         }
     });  
 });
-// End Register peaje
+// End Register deta peaje
 
 // Delete deta peajes
 app.delete('/detapeajes/:idPeaje/:idDeta/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {       
