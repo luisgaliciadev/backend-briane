@@ -913,9 +913,18 @@ app.get('/productos',mdAuthenticattion.verificarToken, (req, res, next ) => {
 
 // Register ruta
 app.post('/ruta', (req, res, next ) => {
-    var body = req.body;     
-    var params = `'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS}`;
+    var body = req.body;   
+    let horaInicio = body.HORA_INICIO.substring(0,2) + ':' + body.HORA_INICIO.substring(2);
+    let horaFin = body.HORA_FIN.substring(0,2) + ':' + body.HORA_FIN.substring(2);
+    let idaHoras = body.IDA_HORAS.substring(0,2) + ':' + body.IDA_HORAS.substring(2);
+    let retornoHoras = body.RETORNO_HORAS.substring(0,2) + ':' + body.RETORNO_HORAS.substring(2);
+    let origenHoras = body.ORIGEN_HORAS.substring(0,2) + ':' + body.ORIGEN_HORAS.substring(2);
+    let destinoHoras = body.DESTINO_HORAS.substring(0,2) + ':' + body.DESTINO_HORAS.substring(2);
+    // let leadtimeHoras = body.LEADTIME_HORAS.substring(0,2) + ':' + body.LEADTIME_HORAS.substring(2);  
+
+    var params = `'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS},'${horaInicio}','${horaFin}',${body.KM},'${idaHoras}','${retornoHoras}','${origenHoras}','${destinoHoras}','${body.LEADTIME_HORAS}',${body.LEADTIME_DIAS},${body.COSTO_ESTIBA},${body.PEAJES},${body.COMBUSTIBLE_GLNS},${body.REDIMIENTO_KM_GLNS}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_RUTA ${params}`;
+    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql,  (err, result) => {
         if (err) { 
@@ -1096,9 +1105,16 @@ app.get('/rutas/:search',mdAuthenticattion.verificarToken, (req, res, next ) => 
 // End Get rutas
 
 // Update ruta
-app.put('/ruta', (req, res, next ) => {
-    var body = req.body;     
-    var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO}`;
+app.put('/ruta', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var body = req.body;   
+    let horaInicio = body.HORA_INICIO.substring(0,2) + ':' + body.HORA_INICIO.substring(2);
+    let horaFin = body.HORA_FIN.substring(0,2) + ':' + body.HORA_FIN.substring(2);
+    let idaHoras = body.IDA_HORAS.substring(0,2) + ':' + body.IDA_HORAS.substring(2);
+    let retornoHoras = body.RETORNO_HORAS.substring(0,2) + ':' + body.RETORNO_HORAS.substring(2);
+    let origenHoras = body.ORIGEN_HORAS.substring(0,2) + ':' + body.ORIGEN_HORAS.substring(2);
+    let destinoHoras = body.DESTINO_HORAS.substring(0,2) + ':' + body.DESTINO_HORAS.substring(2);     
+    var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS},'${horaInicio}','${horaFin}',${body.KM},'${idaHoras}','${retornoHoras}','${origenHoras}','${destinoHoras}','${body.LEADTIME_HORAS}',${body.LEADTIME_DIAS},${body.COSTO_ESTIBA},${body.PEAJES},${body.COMBUSTIBLE_GLNS},${body.REDIMIENTO_KM_GLNS}`;
+    // var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_RUTA ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -1133,7 +1149,7 @@ app.put('/ruta', (req, res, next ) => {
 // End Update ruta
 
 // Delete ruta
-app.delete('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
+app.delete('/ruta/:idRuta/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var idRuta = req.params.idRuta;  
     var idUsuario = req.params.idUsuario;    
     var params = `${idRuta},${idUsuario}`;
@@ -1171,7 +1187,7 @@ app.delete('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
 // End Delete ruta
 
 // Register deta ruta tipo carga
-app.post('/detarutatipocarga/:idTipoCarga/:idRuta/:idUsuario', (req, res, next ) => {
+app.post('/detarutatipocarga/:idTipoCarga/:idRuta/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var idTipoCarga = req.params.idTipoCarga;  
     var idRuta = req.params.idRuta;  
     var idUsuario = req.params.idUsuario;    
@@ -1197,7 +1213,7 @@ app.post('/detarutatipocarga/:idTipoCarga/:idRuta/:idUsuario', (req, res, next )
 // End register deta ruta tipo carga
 
 // Register deta ruta producto
-app.post('/detarutaproducto/:idProducto/:idRuta/:idUsuario', (req, res, next ) => {
+app.post('/detarutaproducto/:idProducto/:idRuta/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var idProducto = req.params.idProducto;  
     var idRuta = req.params.idRuta;  
     var idUsuario = req.params.idUsuario;    
@@ -1223,7 +1239,7 @@ app.post('/detarutaproducto/:idProducto/:idRuta/:idUsuario', (req, res, next ) =
 // End register deta ruta tipo carga
 
 // Delete deta ruta tipo carga
-app.delete('/detarutatipocarga/:idDeta/:idUsuario', (req, res, next ) => {
+app.delete('/detarutatipocarga/:idDeta/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var idDeta = req.params.idDeta;  
     var idUsuario = req.params.idUsuario;    
     var params = `${idDeta},${idUsuario}`;
@@ -1249,9 +1265,8 @@ app.delete('/detarutatipocarga/:idDeta/:idUsuario', (req, res, next ) => {
 // End delete deta ruta tipo carga
 
 
-
 // Delete deta ruta producto
-app.delete('/detarutaproducto/:idDeta/:idUsuario', (req, res, next ) => {
+app.delete('/detarutaproducto/:idDeta/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var idDeta = req.params.idDeta;  
     var idUsuario = req.params.idUsuario;    
     var params = `${idDeta},${idUsuario}`;
@@ -1277,15 +1292,16 @@ app.delete('/detarutaproducto/:idDeta/:idUsuario', (req, res, next ) => {
 // End delete deta ruta producto
 
 // Aprobar ruta
-app.put('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
+app.put('/aprobarRuta/:idRuta/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var idRuta = req.params.idRuta;  
     var idUsuario = req.params.idUsuario;    
     var params = `${idRuta},${idUsuario}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_APROBAR_RUTA ${params}`;
-    console.log(lsql);
+    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
+            console.log(error)
             return res.status(500).send({
                 ok: false,
                 message: 'Error en la petición.',
@@ -1314,6 +1330,124 @@ app.put('/ruta/:idRuta/:idUsuario', (req, res, next ) => {
     });
 });
 // End Aprobar ruta
+
+// Register documentos conductores
+app.post('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `'${body.nombreDocumento.toUpperCase()}',${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_DOCUMENTOS_CONDUCTOR ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documento = result.recordset[0];  
+            var idDocumento =  documento.ID_DOCUMENTO;
+
+            if (!idDocumento) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documento
+            });
+        }
+    });  
+});
+// End Get documentos conductores
+
+// Update documentos conductores
+app.put('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idDocumento},'${body.nombreDocumento.toUpperCase()}',${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_OP_DOCUMENTOS_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documento = result.recordset[0];
+            var idDocumento =  documento.ID_DOCUMENTO;
+            if (!idDocumento) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documento
+            });
+        }
+    });  
+});
+// End Get documentos conductores
+
+// Delete documentos conductores
+app.delete('/documentosConductor/:idDoc/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var idDoc = req.params.idDoc;  
+    var idUser = req.params.idUser; 
+    var params = `${idDoc},${idUser}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_OP_DOCUMENTOS_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documento = result.recordset[0];  
+            var idDocumento =  documento.ID_DOCUMENTO;
+            if (!idDocumento) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documento
+            });
+        }
+    });  
+});
+// End delete documentos conductores
+
+// Get documentos conductores
+app.get('/documentosConductor/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var lsql = `FE_SUPERVAN.DBO.GET_OP_DOCUMENTOS_CONDUCTOR`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentos = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                documentos
+            });
+        }
+    });  
+});
+// End Get documentos conductores
 
 // REGISTER
 ////////////////////////////////////////////////////////////////////////////////

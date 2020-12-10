@@ -6,8 +6,8 @@ var express = require('express');
 var mssql = require('mssql');
 var bodyParser = require('body-parser');
 var app = express();
-app.use(bodyParser.urlencoded({ extended: false}));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 var mdAuthenticattion = require('../middlewares/authenticated');
 
 // Get Orden servicio

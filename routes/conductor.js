@@ -2409,6 +2409,32 @@ app.post('/descontarsaldospeajes/:idUser', mdAuthenticattion.verificarToken, (re
     });
 });
 // End notificar saldos peaje
+
+// Get conductores
+app.get('/conductores/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var search = req.params.search;
+    var params =  `'${search}'`;
+    var lsql = `FE_SUPERVAN.DBO.GET_OP_CONDUCTORES ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var conductores = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                conductores
+            });
+        }
+    });  
+});
+// End Get conductores
+
+
     
 module.exports = app;
 
