@@ -19,12 +19,10 @@ app.use(bodyParser.json());
 app.use(fileUpload());
 
 app.put('/:tipo/:id/:id_user', (req, res, next ) => {
-
     var tipo = req.params.tipo;
     var id = req.params.id;
     var id_user = req.params.id_user;
-    
-    var tiposValidos = ['user', 'company','denuncia','viaticos-conductor']
+    var tiposValidos = ['user', 'company','denuncia','viaticos-conductor','documentos-conductor','documentos-unidad']
 
     if (tiposValidos.indexOf(tipo) < 0) {
         return res.status(400).send({
@@ -43,9 +41,8 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
         var file = req.files.image;
         var fileName = file.name.split('.');
         var extFile = fileName[fileName.length - 1];
-        
-        
-        // console.log('tipo:', tipo);
+        var nombreArchivo = fileName[0];
+       
         if (tipo === 'user' || tipo === 'company') {
             var extValida = ['png', 'PNG', 'jpeg', 'JPEG', 'gif', 'GIF', 'jpg', 'JPG'];
         }
@@ -57,7 +54,15 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
         if (tipo === 'viaticos-conductor') {
             var extValida = ['pdf']; 
         }
-        // console.log('extValida:', extValida)
+
+        if (tipo === 'documentos-conductor') {
+            var extValida = ['png','PNG','jpeg','JPEG','jpg','JPG','pdf','txt','docx','xlsx', 'pptx']; 
+        }
+
+        if (tipo === 'documentos-unidad') {
+            var extValida = ['png','PNG','jpeg','JPEG','jpg','JPG','pdf','txt','docx','xlsx', 'pptx']; 
+        }
+
         if (extValida.indexOf(extFile) < 0) {
             res.status(400).send({
                 ok: false,
@@ -67,19 +72,25 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
             // File Name
             var fileName = `${id}-${new Date().getMilliseconds()}.${extFile}`;
 
+            if (tipo === 'documentos-conductor') {
+                var fileName = `${id_user}-${id}-${nombreArchivo}.${extFile}`;
+            }
+
+            if (tipo === 'documentos-unidad') {
+                var fileName = `${id_user}-${id}-${nombreArchivo}.${extFile}`;
+            }
+
             // Tempotal path
             var path = `./uploads/${tipo}/${fileName}`;
             
             file.mv(path, err => {
                 if(err){
-                    // console.log(err);
                     res.status(500).send({
                         ok: false,
                         message: 'Error al intentar guardar el archivo.',
                         error: err
                     });
                 } else {
-                    // console.log('path:', path);
                     uploadFile(tipo, id, fileName, res, id_user);
                 }
             });
@@ -204,11 +215,8 @@ function uploadFile(tipo, id, fileName, res, id_user){
         });
     }
 
-    if (tipo === 'denuncia'){
-        // console.log('denuncia');        
+    if (tipo === 'denuncia'){      
         var params = `${id}`;
-        // console.log(params);
-        // return;
         var lsql = `EXEC GET_DENUNCIA ${params}`;
         var request = new mssql.Request();
         request.query(lsql, (err, result) => {
@@ -247,8 +255,6 @@ function uploadFile(tipo, id, fileName, res, id_user){
                         // }
                     }
                     var params = `${id}, '${fileName}', '${id_user}'`;
-                    // console.log('params:', params);
-                    // return;
                     var lsql = `EXEC UPDATE_ARCHIVO_DENUNCIA ${params}`;
                     var request = new mssql.Request();
                     request.query(lsql, (err, result) => {
@@ -270,6 +276,122 @@ function uploadFile(tipo, id, fileName, res, id_user){
                                     ok: true,
                                     message: denunciaUpdated[0].MESSAGE,                             
                                     denuncia: denunciaUpdated[0]
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    if (tipo === 'documentos-conductor'){      
+        var params = `${id}`;
+        var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
+        var request = new mssql.Request();
+        request.query(lsql, (err, result) => {
+            if (err) { 
+                return res.status(500).send({
+                    ok: false,
+                    message: 'Error en la petición.',
+                    error: err
+                });
+            } else {
+                var relacionDocConductor = result.recordset;
+                var idRelacion = relacionDocConductor[0].ID_RELACION_DOC_COND;                
+                if (idRelacion === 0) {
+                    return  res.status(400).send({
+                        ok: true, 
+                        message: 'Registro no encontrado.'
+                    }); 
+                } else {                                       
+                    var oldPath = './uploads/documentos-conductor/' + relacionDocConductor[0].NB_ARCHIVO;
+                    // elimina archivo anterior
+                    if (fs.existsSync(oldPath)) {
+                        // if (company[0].IMAGE.length > 0) {
+                            fs.unlinkSync(oldPath);
+                        // }
+                    }
+                    var params = `${id}, '${fileName}', '${id_user}'`;
+                    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_ARCHIVO_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var relacionDocConductor = result.recordset;
+                            if (relacionDocConductor.length === 0) {
+                                return res.status(400).send({
+                                    ok: true,
+                                    message: 'No existe el registro.'
+                                });
+                            } else {
+                                return res.status(200).send({
+                                    ok: true,
+                                    // message: denunciaUpdated[0].MESSAGE,                             
+                                    relacionDocConductor
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    if (tipo === 'documentos-unidad'){    
+        var params = `${id}`;
+        var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_RELACION_DOCUMENTOS_UNIDAD ${params}`;
+        var request = new mssql.Request();
+        request.query(lsql, (err, result) => {
+            if (err) { 
+                return res.status(500).send({
+                    ok: false,
+                    message: 'Error en la petición.',
+                    error: err
+                });
+            } else {
+                var relacionDocUnidad = result.recordset;
+                var idRelacion = relacionDocUnidad[0].ID_RELACION_DOC_UNIDAD;                
+                if (idRelacion === 0) {
+                    return  res.status(400).send({
+                        ok: true, 
+                        message: 'Registro no encontrado.'
+                    }); 
+                } else {                                       
+                    var oldPath = './uploads/documentos-unidad/' + relacionDocUnidad[0].NB_ARCHIVO;
+                    // elimina archivo anterior
+                    if (fs.existsSync(oldPath)) {
+                        // if (company[0].IMAGE.length > 0) {
+                            fs.unlinkSync(oldPath);
+                        // }
+                    }
+                    var params = `${id}, '${fileName}', '${id_user}'`;
+                    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_ARCHIVO_RELACION_DOCUMENTOS_UNIDAD ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var relacionDocUnidad = result.recordset;
+                            if (relacionDocUnidad.length === 0) {
+                                return res.status(400).send({
+                                    ok: true,
+                                    message: 'No existe el registro.'
+                                });
+                            } else {
+                                return res.status(200).send({
+                                    ok: true,
+                                    // message: denunciaUpdated[0].MESSAGE,                             
+                                    relacionDocUnidad
                                 });
                             }
                         }

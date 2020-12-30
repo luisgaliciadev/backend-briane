@@ -1384,7 +1384,6 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
                                     if (error) {
                                         console.log('error:', error);
                                     } else {
-                                        // console.log('info:', info);
                                         infoMail = info.messageId
                                     }
                                 });
@@ -1905,7 +1904,6 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
         } else {
             var peajes = result.recordset;
             if (peajes.length > 0) {
-                // console.log(peajes);
                 var idPeaje = peajes[0].ID_PEAJE;
                 if (!idPeaje) {
                     return res.status(400).send({
@@ -2031,7 +2029,6 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                     if (error) {
                         console.log('error:', error);
                     } else {
-                        // console.log('info:', info);
                         infoMail = info.messageId
                     }
                 });
@@ -2069,7 +2066,6 @@ app.put('/liquidarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
             });
         } else {
             var peajes = result.recordset;
-            // console.log(peajes);
             if (peajes) {
                 var idPeaje = peajes[0].ID_PEAJE;
                 if (!idPeaje) {
@@ -2414,7 +2410,7 @@ app.post('/descontarsaldospeajes/:idUser', mdAuthenticattion.verificarToken, (re
 app.get('/conductores/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
     var search = req.params.search;
     var params =  `'${search}'`;
-    var lsql = `FE_SUPERVAN.DBO.GET_OP_CONDUCTORES ${params}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_CONDUCTORES ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -2433,9 +2429,7 @@ app.get('/conductores/:search', mdAuthenticattion.verificarToken, (req, res, nex
     });  
 });
 // End Get conductores
-
-
-    
+  
 module.exports = app;
 
 

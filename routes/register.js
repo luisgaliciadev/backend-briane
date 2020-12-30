@@ -709,7 +709,6 @@ app.get('/documentosbriane/:idClasificacion/:idCategoria/:idArea', (req, res, ne
     var idArea = req.params.idArea;
     var params = `${idClasificacion},${idCategoria},${idArea}`; 
     var lsql = `EXEC GET_DOCUMENTOS_BRIANE ${params}`;
-    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -924,7 +923,6 @@ app.post('/ruta', (req, res, next ) => {
 
     var params = `'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS},'${horaInicio}','${horaFin}',${body.KM},'${idaHoras}','${retornoHoras}','${origenHoras}','${destinoHoras}','${body.LEADTIME_HORAS}',${body.LEADTIME_DIAS},${body.COSTO_ESTIBA},${body.PEAJES},${body.COMBUSTIBLE_GLNS},${body.REDIMIENTO_KM_GLNS}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_RUTA ${params}`;
-    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql,  (err, result) => {
         if (err) { 
@@ -1244,7 +1242,6 @@ app.delete('/detarutatipocarga/:idDeta/:idUsuario', mdAuthenticattion.verificarT
     var idUsuario = req.params.idUsuario;    
     var params = `${idDeta},${idUsuario}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_OP_DETA_RUTA_TIPO_CARGA ${params}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1271,7 +1268,6 @@ app.delete('/detarutaproducto/:idDeta/:idUsuario', mdAuthenticattion.verificarTo
     var idUsuario = req.params.idUsuario;    
     var params = `${idDeta},${idUsuario}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_OP_DETA_RUTA_PRODUCTO ${params}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1297,11 +1293,9 @@ app.put('/aprobarRuta/:idRuta/:idUsuario', mdAuthenticattion.verificarToken, (re
     var idUsuario = req.params.idUsuario;    
     var params = `${idRuta},${idUsuario}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_APROBAR_RUTA ${params}`;
-    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
-            console.log(error)
             return res.status(500).send({
                 ok: false,
                 message: 'Error en la petición.',
@@ -1332,11 +1326,10 @@ app.put('/aprobarRuta/:idRuta/:idUsuario', mdAuthenticattion.verificarToken, (re
 // End Aprobar ruta
 
 // Register documentos conductores
-app.post('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+app.post('/documentoConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {     
     var body = req.body;
     var params = `'${body.nombreDocumento.toUpperCase()}',${body.idUsuario}`; 
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_DOCUMENTOS_CONDUCTOR ${params}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1365,7 +1358,7 @@ app.post('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, ne
 // End Get documentos conductores
 
 // Update documentos conductores
-app.put('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+app.put('/documentoConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {     
     var body = req.body;
     var params = `${body.idDocumento},'${body.nombreDocumento.toUpperCase()}',${body.idUsuario}`; 
     var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_OP_DOCUMENTOS_CONDUCTOR ${params}`;
@@ -1396,7 +1389,7 @@ app.put('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, nex
 // End Get documentos conductores
 
 // Delete documentos conductores
-app.delete('/documentosConductor/:idDoc/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+app.delete('/documentoConductor/:idDoc/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {     
     var idDoc = req.params.idDoc;  
     var idUser = req.params.idUser; 
     var params = `${idDoc},${idUser}`; 
@@ -1429,7 +1422,7 @@ app.delete('/documentosConductor/:idDoc/:idUser', mdAuthenticattion.verificarTok
 
 // Get documentos conductores
 app.get('/documentosConductor/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
-    var lsql = `FE_SUPERVAN.DBO.GET_OP_DOCUMENTOS_CONDUCTOR`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_DOCUMENTOS_CONDUCTOR`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -1448,6 +1441,470 @@ app.get('/documentosConductor/:search', mdAuthenticattion.verificarToken, (req, 
     });  
 });
 // End Get documentos conductores
+
+// Register documento cliente-conductor
+app.post('/documentoCliente', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idDocumento},${body.idCliente},${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_RELACION_DOCUMENTOS_CLIENTE_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentoCliente = result.recordset[0];  
+            var idRelacionDocCliente =  documentoCliente.ID_RELACION_DOC_CLIENTE;
+            if (!idRelacionDocCliente) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documentoCliente.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentoCliente
+            });
+        }
+    });  
+});
+// End Register documento cliente
+
+// Get relacion documentos clientes conductor
+app.get('/documentosCliente/:idCliente', mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var idCliente = req.params.idCliente;     
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_RELACION_DOCUMENTOS_CLIENTE_CONDUCTOR ${idCliente}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentosCliente = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                documentosCliente
+            });
+        }
+    });  
+});
+// End Get documentos clientes conductor
+
+// Delete documento cliente conductor
+app.delete('/documentoCliente/:id/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var id = req.params.id;  
+    var idUser = req.params.idUser; 
+    var params = `${id},${idUser}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_OP_RELACION_DOCUMENTOS_CLIENTE_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentoCliente = result.recordset[0];  
+            var idRelacionDocCliente =  documentoCliente.ID_RELACION_DOC_CLIENTE;
+            if (!idRelacionDocCliente) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentoCliente
+            });
+        }
+    });  
+});
+// End delete documento cliente conductor
+
+// Get relacion documentos conductor total
+app.get('/documentosConductorTotal/:idCliente/:idConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var idCliente = req.params.idCliente;  
+    var idConductor = req.params.idConductor; 
+    var params = `${idCliente},${idConductor}`;   
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_RELACION_DOCUMENTOS_CONDUCTOR_TOTAL ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentosConductor = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                documentosConductor
+            });
+        }
+    });  
+});
+// End Get relacion documentos conductor total
+
+// Register relación documento conductor
+app.post('/documentoConductorRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idConductor},${body.idDocumento},${body.idCliente},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentoConductor = result.recordset[0];  
+            var idRelacionDocConductor =  documentoConductor.ID_RELACION_DOC_COND;
+            if (!idRelacionDocConductor) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documentoConductor.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentoConductor
+            });
+        }
+    });  
+});
+// End Register relación documento conductor
+
+// Update relación documento conductor
+app.put('/documentoConductorRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idRelacionDocConductor},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.fgActivo},${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_OP_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentoConductor = result.recordset[0];  
+            var idRelacionDocConductor =  documentoConductor.ID_RELACION_DOC_COND;
+            if (!idRelacionDocConductor) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documentoConductor.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentoConductor
+            });
+        }
+    });  
+});
+// End Update relación documento conductor
+
+// Register documentos unidad
+app.post('/documentoUnidad', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `'${body.nombreDocumento.toUpperCase()}',${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_DOCUMENTOS_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documento = result.recordset[0];  
+            var idDocumento =  documento.ID_DOCUMENTO;
+
+            if (!idDocumento) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documento
+            });
+        }
+    });  
+});
+// End Get documentos unidad
+
+// Get documentos unidades
+app.get('/documentosUnidad/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_DOCUMENTOS_UNIDAD`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentos = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                documentos
+            });
+        }
+    });  
+});
+// End Get documentos unidades
+
+// Update documentos unidad
+app.put('/documentoUnidad', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idDocumento},'${body.nombreDocumento.toUpperCase()}',${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_OP_DOCUMENTOS_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documento = result.recordset[0];
+            var idDocumento =  documento.ID_DOCUMENTO;
+            if (!idDocumento) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documento
+            });
+        }
+    });  
+});
+// End Get documentos unidad
+
+// Delete documentos unidad
+app.delete('/documentoUnidad/:idDoc/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var idDoc = req.params.idDoc;  
+    var idUser = req.params.idUser; 
+    var params = `${idDoc},${idUser}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_OP_DOCUMENTOS_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documento = result.recordset[0];  
+            var idDocumento =  documento.ID_DOCUMENTO;
+            if (!idDocumento) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documento
+            });
+        }
+    });  
+});
+// End delete documentos unidad
+
+// Register documento cliente-unidad
+app.post('/documentoClienteUnidad', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idDocumento},${body.idCliente},${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_RELACION_DOCUMENTOS_CLIENTE_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentoClienteUnidad = result.recordset[0];  
+            var idRelacionDocClienteUnidad =  documentoClienteUnidad.ID_RELACION_DOC_CLIENTE_UNIDAD;
+            if (!idRelacionDocClienteUnidad) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documentoCliente.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentoClienteUnidad
+            });
+        }
+    });  
+});
+// End Register documento cliente unidad
+
+// Get relacion documentos clientes unidad
+app.get('/documentosClienteUnidad/:idCliente', mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var idCliente = req.params.idCliente;     
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_RELACION_DOCUMENTOS_CLIENTE_UNIDAD ${idCliente}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentosClienteUnidad = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                documentosClienteUnidad
+            });
+        }
+    });  
+});
+// End Get documentos clientes unidad
+
+// Delete documento cliente unidad
+app.delete('/documentoClienteUnidad/:id/:idUser', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var id = req.params.id;  
+    var idUser = req.params.idUser; 
+    var params = `${id},${idUser}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_OP_RELACION_DOCUMENTOS_CLIENTE_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentoClienteUnidad = result.recordset[0];  
+            var idRelacionDocClienteUnidad =  documentoClienteUnidad.ID_RELACION_DOC_CLIENTE_UNIDAD;
+            if (!idRelacionDocClienteUnidad) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documento.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentoClienteUnidad
+            });
+        }
+    });  
+});
+// End delete documento cliente unidad
+
+// Get relacion documentos unidad total
+app.get('/documentosUnidadTotal/:idCliente/:idUnidad', mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var idCliente = req.params.idCliente;  
+    var idUnidad = req.params.idUnidad; 
+    var params = `${idCliente},${idUnidad}`;   
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_RELACION_DOCUMENTOS_UNIDAD_TOTAL ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentosUnidad = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                documentosUnidad
+            });
+        }
+    });  
+});
+// End Get relacion documentos unidad total
+
+// Register relación documento unidad
+app.post('/documentoUnidadRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idUnidad},${body.idDocumento},${body.idCliente},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_RELACION_DOCUMENTOS_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentosUnidad = result.recordset[0];  
+            var idRelacionDocUnidad =  documentosUnidad.ID_RELACION_DOC_UNIDAD;
+            if (!idRelacionDocUnidad) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documentosUnidad.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentosUnidad
+            });
+        }
+    });  
+});
+// End Register relación documento unidad
+
+// Update relación documento unidad
+app.put('/documentoUnidadRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idRelacionDocUnidad},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.fgActivo},${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_OP_RELACION_DOCUMENTOS_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var documentoUnidad = result.recordset[0];  
+            var idRelacionDocUnidad =  documentoUnidad.ID_RELACION_DOC_UNIDAD;
+            if (!idRelacionDocUnidad) {
+                return res.status(400).send({
+                    ok: false,
+                    message: documentoUnidad.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                documentoUnidad
+            });
+        }
+    });  
+});
+// End Update relación documento unidad
+
 
 // REGISTER
 ////////////////////////////////////////////////////////////////////////////////

@@ -329,7 +329,6 @@ app.get('/diasproductividadop/:semana/:year/:zona',mdAuthenticattion.verificarTo
     var zona = req.params.zona;
     var params =  `${semana},${year},${zona}`;   
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_VIAJES_DIA ${params}`;
-    // console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -2735,5 +2734,60 @@ app.get('/tiempotardanzaviaje/:iniciViaje/:idTracto', mdAuthenticattion.verifica
     });
 });
 // End Get tiempo tardanza viaje
+
+// Get unidades
+app.get('/unidades/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var search = req.params.search;
+    var params =  `'${search}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_VEHICULOS ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var unidades = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                unidades
+            });
+        }
+    });  
+});
+// End Get unidades
+
+// Get unidad
+app.get('/unidad/:placa', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var placa = req.params.placa;
+    var params =  `'${placa}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_UNIDAD ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var unidad = result.recordset[0];  
+            if (!unidad) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe la placa.'
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                unidad
+            });
+            
+        }
+    });  
+});
+// End Get unidad
 
 module.exports = app;
