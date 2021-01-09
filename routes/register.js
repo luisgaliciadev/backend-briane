@@ -1355,7 +1355,7 @@ app.post('/documentoConductor', mdAuthenticattion.verificarToken, (req, res, nex
         }
     });  
 });
-// End Get documentos conductores
+// End Register documentos conductores
 
 // Update documentos conductores
 app.put('/documentoConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {     

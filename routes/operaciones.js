@@ -14,7 +14,7 @@ var mdAuthenticattion = require('../middlewares/authenticated');
 app.get('/os/:idUser',mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var idUser = req.params.idUser;
     var params =  `${idUser}`;
-    var lsql = `EXEC GET_OS_GUIA ${params}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OS_GUIA ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -38,7 +38,7 @@ app.get('/os/:idUser',mdAuthenticattion.verificarToken, (req, res, next ) => {
 app.get('/osall/:idUser',mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var idUser = req.params.idUser;
     var params =  `${idUser}`;
-    var lsql = `EXEC GET_OS ${params}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_ORDENES_SERVICIOS ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -57,6 +57,30 @@ app.get('/osall/:idUser',mdAuthenticattion.verificarToken, (req, res, next ) => 
     });
 });
 // End Get orden servicio all
+
+// Get Orden servicio confirmadas
+app.get('/osPlanificacion',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    //var idUser = req.params.idUser;
+    //var params =  `${idUser}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OS_CONFIRMADAS`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ordenesServicio = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                ordenesServicio
+            });
+        }
+    });
+});
+// End Get orden servicio confirmadas
 
 // Get Vehiculo
 app.get('/vehiculo/:placa/:tipo', (req, res, next ) => {   
@@ -2789,5 +2813,290 @@ app.get('/unidad/:placa', mdAuthenticattion.verificarToken, (req, res, next ) =>
     });  
 });
 // End Get unidad
+
+// Get unidadades disponibles
+app.get('/unidadesDisponibles/:idTipo', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+    var idTipo = req.params.idTipo;
+    var params =  `'${idTipo}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_UNIDADES_DISPONIBLES ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var unidades = result.recordset;  
+            return res.status(200).send({
+                ok: true,
+                unidades
+            });
+            
+        }
+    });  
+});
+// End Get unidades disponibles
+
+// Get conductores disponibles
+app.get('/conductoresDisponibles', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_CONDUCTORES_DISPONIBLES`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var conductores = result.recordset;  
+            return res.status(200).send({
+                ok: true,
+                conductores
+            });
+            
+        }
+    });  
+});
+// End Get conductores disponibles
+
+// Get orden de servicio
+app.get('/ordenServicio/:id', (req, res, next ) => {   
+    var id = req.params.id;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_ORDEN_SERVICIO ${id}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ordenServicio = result.recordset[0];
+            if (!ordenServicio) {
+                return res.status(400).send({
+                    ok: true,
+                    message: 'No existe la orden de servicio.'
+                });    
+            }         
+            return res.status(200).send({
+                ok: true,
+                ordenServicio
+            });
+        }
+    });
+});
+// End Get orden de servicio
+
+// Register planificacion operaciones
+app.post('/planificacionOp', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idOrdenServicio},${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_PLANIFICACION ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planifiacionOp = result.recordset[0];  
+            var idPlanifiacionOp =  planifiacionOp.ID_PLANIFICACION_OP;
+
+            if (!idPlanifiacionOp) {
+                return res.status(400).send({
+                    ok: false,
+                    message: planifiacionOp.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                planifiacionOp
+            });
+        }
+    });  
+});
+// End Register planificacion operaciones
+
+// Get planificaciones op
+app.get('/planificacionesOp/:search/:desde/:hasta', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var search = req.params.search;
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var params = `${search},'${desde}','${hasta}'`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_PLANIFICACIONES ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planificaciones = result.recordset;  
+            return res.status(200).send({
+                ok: true,
+                planificaciones
+            });
+        }
+    });  
+});
+// End Get planificaciones op
+
+// Get planificacion op
+app.get('/planificacionOp/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var id = req.params.id;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_PLANIFICACION ${id}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planificacionOp = result.recordset[0];  
+            if (!planificacionOp) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existe el registro.'
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                planificacionOp
+            });
+        }
+    });  
+});
+// End Get planificacion op
+
+// Get planificacion op deta
+app.get('/planificacionDeta/:idPlanificacion',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var idPlanificacion = req.params.idPlanificacion;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GETS_PLANIFICACION_OP_DETA ${idPlanificacion}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planificacionDeta = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                planificacionDeta
+            });
+        }
+    });
+});
+// End Get planificacion op deta
+
+// Register planificacion operaciones deta
+app.post('/planificacionOpDeta', mdAuthenticattion.verificarToken, (req, res, next ) => {    
+    var body = req.body;
+    var params = `${body.idOrdenServicio},${body.idTracto},${body.idRemolque},${body.idConductor},${body.idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_PLANIFICACION_DETA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planificacionDeta = result.recordset[0];  
+            var idGuia =  planificacionDeta.ID_GUIA;
+            if (!idGuia) {
+                return res.status(400).send({
+                    ok: false,
+                    message: planifiacionOp.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                planificacionDeta
+            });
+        }
+    });  
+});
+// End Register planificacion operaciones deta
+
+// Delete planificacion op
+app.delete('/planificacionOp/:id/:idOs/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var id = req.params.id;
+    var idOs = req.params.idOs;
+    var idUsuario = req.params.idUsuario;
+    var params = `${id},${idOs},${idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_OP_PLANIFICACION ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planifiacionOp = result.recordset[0];  
+            var idPlanifiacionOp =  planifiacionOp.ID_PLANIFICACION_OP;
+
+            if (!idPlanifiacionOp) {
+                return res.status(400).send({
+                    ok: false,
+                    message: planifiacionOp.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                planifiacionOp
+            });
+        }
+    });  
+});
+// End Delete planificacion op
+
+// Delete planificacion op
+app.delete('/planificacionOpDeta/:id/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var id = req.params.id;
+    var idUsuario = req.params.idUsuario;
+    var params = `${id},${idUsuario}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_DELETE_OP_PLANIFICACION_DETA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planifiacionOpDeta = result.recordset[0];  
+            var idGuia =  planifiacionOpDeta.ID_GUIA;
+
+            if (!idGuia) {
+                return res.status(400).send({
+                    ok: false,
+                    message: planifiacionOp.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                planifiacionOpDeta
+            });
+        }
+    });  
+});
+// End Delete planificacion op
 
 module.exports = app;

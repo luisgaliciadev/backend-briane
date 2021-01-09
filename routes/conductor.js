@@ -1373,7 +1373,7 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
                                 var datosEnvio = {
                                     from: "BRIANE SMART <briane.smart@briane.pe>",
                                     // to: 'luis.galicia@supervan.pe,galicialuis@hotmail.es,luisgalic@gmail.com',
-                                    to: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+                                    to: 'carlos.inocente@supervan.pe;reyza.narciso@supervan.pe;gabriela.napa@supervan.pe',
                                     // cc: 'luisgalic@gmail.com',
                                     cc: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
                                     bcc: 'briane.smart@briane.pe',
@@ -2020,7 +2020,7 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                     // to: 'luis.galicia@supervan.pe',
                     to: 'marlon.gutierrez@supervan.pe;gerty.guanilo@supervan.pe;freddy.herrera@supervan.pe',
                     // cc: 'luisgalic@gmail.com',
-                    cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+                    cc: 'carlos.inocente@supervan.pe;reyza.narciso@supervan.pe;gabriela.napa@supervan.pe',
                     bcc: 'briane.smart@briane.pe',
                     subject: 'Notificaciones BRIANE SMART',
                     html: contentHtml
@@ -2207,7 +2207,7 @@ app.post('/notificarsaldos/:idUser', mdAuthenticattion.verificarToken, (req, res
                 // to: 'luis.galicia@supervan.pe;',
                 to: 'renzo.rodriguez@supervan.pe;richard.alfaro@supervan.pe',
                 // cc: 'luisgalic@gmail.com',
-                cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+                cc: 'carlos.inocente@supervan.pe;reyza.narciso@supervan.pe;gabriela.napa@supervan.pe',
                 bcc: 'briane.smart@briane.pe',
                 subject: 'Notificaciones BRIANE SMART',
                 html: contentHtml
@@ -2379,7 +2379,7 @@ app.post('/descontarsaldospeajes/:idUser', mdAuthenticattion.verificarToken, (re
             //     to: 'luis.galicia@supervan.pe;',
             //     // to: 'renzo.rodriguez@supervan.pe;richard.alfaro@supervan.pe',
             //     cc: 'luisgalic@gmail.com',
-            //     // cc: 'carlos.inocente@supervan.pe;nelly.anaya@supervan.pe;gabriela.napa@supervan.pe',
+            //     // cc: 'carlos.inocente@supervan.pe;reyza.narciso@supervan.pe;gabriela.napa@supervan.pe',
             //     bcc: 'briane.smart@briane.pe',
             //     subject: 'Notificaciones BRIANE SMART',
             //     html: contentHtml
