@@ -729,9 +729,10 @@ app.get('/documentosbriane/:idClasificacion/:idCategoria/:idArea', (req, res, ne
 // End Get DOCUMENTOS_BRIANE
 
 // Get EMPLEADOS GENESYS
-app.get('/empleadosrrhhgenesys/:fechaContrato',mdAuthenticattion.verificarToken, (req, res, next ) => {
-    var fechaContrato = req.params.fechaContrato;
-    var params = `'${fechaContrato}'`; 
+app.get('/empleadosrrhhgenesys/:desde/:hasta',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var params = `'${desde}', '${hasta}'`; 
     var lsql = `EXEC GET_PERSONAL_RRHH_GENESYS ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -753,9 +754,10 @@ app.get('/empleadosrrhhgenesys/:fechaContrato',mdAuthenticattion.verificarToken,
 // End Get DOCUMENTOS_BRIANE
 
 // Gets EMPLEADOS GENESYS BAJAS
-app.get('/empleadosrrhhgenesysbajas/:fechaContrato',mdAuthenticattion.verificarToken, (req, res, next ) => {
-    var fechaContrato = req.params.fechaContrato;
-    var params = `'${fechaContrato}'`; 
+app.get('/empleadosrrhhgenesysbajas/:desde/:hasta',mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var params = `'${desde}','${hasta}'`; 
     var lsql = `EXEC GET_PERSONAL_RRHH_GENESYS_BAJAS ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {

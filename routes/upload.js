@@ -22,7 +22,7 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
     var tipo = req.params.tipo;
     var id = req.params.id;
     var id_user = req.params.id_user;
-    var tiposValidos = ['user', 'company','denuncia','viaticos-conductor','documentos-conductor','documentos-unidad']
+    var tiposValidos = ['user', 'company','denuncia','viaticos-conductor','documentos-conductor','documentos-unidad','facturas-peaje']
 
     if (tiposValidos.indexOf(tipo) < 0) {
         return res.status(400).send({
@@ -63,6 +63,10 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
             var extValida = ['png','PNG','jpeg','JPEG','jpg','JPG','pdf','txt','docx','xlsx', 'pptx']; 
         }
 
+        if (tipo === 'facturas-peaje') {
+            var extValida = ['png','PNG','jpeg','JPEG','jpg','JPG','pdf']; 
+        }
+
         if (extValida.indexOf(extFile) < 0) {
             res.status(400).send({
                 ok: false,
@@ -78,6 +82,10 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
 
             if (tipo === 'documentos-unidad') {
                 var fileName = `${id_user}-${id}-${nombreArchivo}.${extFile}`;
+            }
+
+            if (tipo === 'facturas-peaje') {
+                var fileName = `${nombreArchivo}.${extFile}`;
             }
 
             // Tempotal path
@@ -392,6 +400,64 @@ function uploadFile(tipo, id, fileName, res, id_user){
                                     ok: true,
                                     // message: denunciaUpdated[0].MESSAGE,                             
                                     relacionDocUnidad
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    if (tipo === 'facturas-peaje'){    
+        var params = `${id}`;
+        var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_RELACION_PEAJE_FACTURA ${params}`;
+        var request = new mssql.Request();
+        request.query(lsql, (err, result) => {
+            if (err) { 
+                return res.status(500).send({
+                    ok: false,
+                    message: 'Error en la petición.',
+                    error: err
+                });
+            } else {
+                var relacionPeajeFactura = result.recordset[0];
+                var idRelacion = relacionPeajeFactura.ID_RELACION_PEAJES;                
+                if (idRelacion === 0) {
+                    return  res.status(400).send({
+                        ok: true, 
+                        message: 'Registro no encontrado.'
+                    }); 
+                } else {                                       
+                    var oldPath = './uploads/facturas-peaje/' + relacionPeajeFactura.NB_ARCHIVO;
+                    // elimina archivo anterior
+                    if (fs.existsSync(oldPath)) {
+                        // if (company[0].IMAGE.length > 0) {
+                            fs.unlinkSync(oldPath);
+                        // }
+                    }
+                    var params = `${id}, '${fileName}', ${id_user}`;
+                    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_ARCHIVO_RELACION_PEAJE_FACTURAS ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var relacionPeajeFacturas = result.recordset;
+                            if (relacionPeajeFacturas.length === 0) {
+                                return res.status(400).send({
+                                    ok: true,
+                                    message: 'No existe el registro.'
+                                });
+                            } else {
+                                return res.status(200).send({
+                                    ok: true,
+                                    // message: denunciaUpdated[0].MESSAGE,                             
+                                    relacionPeajeFacturas
                                 });
                             }
                         }

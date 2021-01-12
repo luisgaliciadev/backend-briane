@@ -170,7 +170,7 @@ app.get('/guia/:id/:idUser', mdAuthenticattion.verificarToken, (req, res, next )
     var idGuia = req.params.id;
     var idUser = req.params.idUser;
     var params =  `${idGuia}, ${idUser}`;
-    var lsql = `EXEC GET_GUIA ${params}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_GUIA ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
