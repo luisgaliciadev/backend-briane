@@ -1135,8 +1135,196 @@ app.get('/descuentopeaje/:desde/:hasta/:search', mdAuthenticattion.verificarToke
 });
 // End Get descuento peaje
 
+// Get Get documentos conductor
+app.get('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+  var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_DOCUMENTOS_CONDUCTOR`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+        return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+        });
+    } else {            
+      var documentosConductor = result.recordset;   
+      // You can define styles as json object
+      const styles = {
+        header: {          
+          fill: {
+            fgColor: {
+              rgb: '3393FF'
+            }
+          },
+          font: {
+            color: {
+              rgb: 'FFFFFFFF'
+            },
+            sz: 12,
+            bold: true,
+            // underline: true,
+            margin: 'center'
+            // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
+          }
+        },
+        cellPink: {
+          fill: {
+            fgColor: {
+              rgb: 'FFFFCCFF'
+            }
+          }
+        },
+        cellGreen: {
+          fill: {
+            fgColor: {
+              rgb: 'FF00FF00'
+            }
+          }
+        }
+      };
+      //Array of objects representing heading rows (very top)
+      const heading = [
+        [''],
+        [{value: `DOCUMENTOS DE CONDUCTORES`, style: styles.header}],
+        [''] // <-- It can be only values
+      ];       
+      //Here you specify the export structure
+      const specification = {
+        ITEMS: { // <- the key should match the actual data key
+          displayName: 'ITEM', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 50 // <- width in pixels
+        },
+        DS_DOCUMENTO: { // <- the key should match the actual data key
+          displayName: 'NOMBRE DOCUMENTO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 700 // <- width in pixels
+        },
+      }
+      const dataset = documentosConductor;
+      const merges = [
+        { start: { row: 2, column: 1 }, end: { row: 2, column:  2} }
+      ]
+      const report = excel.buildExport(
+        [ 
+          {
+            name: 'Report', // <- Specify sheet name (optional)
+            heading: heading, // <- Raw heading array (optional)
+            merges: merges, // <- Merge cell ranges
+            specification: specification, // <- Report specification
+            data: dataset // <-- Report data
+          }
+        ]
+      ); 
+      res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+      return res.status(200).send(report);
+    }
+  });
+});
+// End Get documentos unidades
+
 // Conductor
 ///////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//Unidades vehiculos
+
+// Get Get documentos unidades vehiculos
+app.get('/documentosUnidad', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+  var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_DOCUMENTOS_UNIDAD`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+        return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+        });
+    } else {            
+      var documentosConductor = result.recordset;   
+      // You can define styles as json object
+      const styles = {
+        header: {          
+          fill: {
+            fgColor: {
+              rgb: '3393FF'
+            }
+          },
+          font: {
+            color: {
+              rgb: 'FFFFFFFF'
+            },
+            sz: 12,
+            bold: true,
+            // underline: true,
+            margin: 'center'
+            // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
+          }
+        },
+        cellPink: {
+          fill: {
+            fgColor: {
+              rgb: 'FFFFCCFF'
+            }
+          }
+        },
+        cellGreen: {
+          fill: {
+            fgColor: {
+              rgb: 'FF00FF00'
+            }
+          }
+        }
+      };
+      //Array of objects representing heading rows (very top)
+      const heading = [
+        [''],
+        [{value: `DOCUMENTOS DE UNIDADES`, style: styles.header}],
+        [''] // <-- It can be only values
+      ];       
+      //Here you specify the export structure
+      const specification = {
+        ITEMS: { // <- the key should match the actual data key
+          displayName: 'ITEM', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 50 // <- width in pixels
+        },
+        DS_DOCUMENTO: { // <- the key should match the actual data key
+          displayName: 'NOMBRE DOCUMENTO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 700 // <- width in pixels
+        },
+      }
+      const dataset = documentosConductor;
+      const merges = [
+        { start: { row: 2, column: 1 }, end: { row: 2, column:  2} }
+      ]
+      const report = excel.buildExport(
+        [ 
+          {
+            name: 'Report', // <- Specify sheet name (optional)
+            heading: heading, // <- Raw heading array (optional)
+            merges: merges, // <- Merge cell ranges
+            specification: specification, // <- Report specification
+            data: dataset // <-- Report data
+          }
+        ]
+      ); 
+      res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+      return res.status(200).send(report);
+    }
+  });
+});
+// End Get unidades vehiculos
+
+//Unidades Vehiculos
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 
 module.exports = app;

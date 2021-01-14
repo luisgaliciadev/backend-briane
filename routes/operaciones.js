@@ -245,6 +245,58 @@ app.put('/guia', mdAuthenticattion.verificarToken, (req, res) => {
 });
 // Update guia
 
+// Asingnar guia
+app.put('/asignarGuia', mdAuthenticattion.verificarToken, (req, res) => {
+    var body = req.body;
+    var ID_GUIA = body.ID_GUIA
+    var CORRELATIVO = body.CORRELATIVO;
+    var FECHA = body.FECHA;
+    var FECHA_HORA_FIN = body.FECHA_HORA_FIN;
+    var FH_TRASLADO = body.FH_TRASLADO;
+    var ID_CONDUCTOR = body.ID_CONDUCTOR;
+    var ID_ORDEN_SERVICIO = body.ID_ORDEN_SERVICIO;
+    var ID_REMOLQUE = body.ID_REMOLQUE;
+    var ID_TRACTO = body.ID_TRACTO;
+    var NRO_GUIA_CLIENTE = body.NRO_GUIA_CLIENTE;
+    var NRO_PERMISO = body.NRO_PERMISO;
+    var OBSERVACION = body.OBSERVACION;
+    var PESO_BRUTO = body.PESO_BRUTO;
+    var PESO_NETO = body.PESO_NETO;
+    var PESO_TARA = body.PESO_TARA;
+    var SERIAL = body.SERIAL;
+    var TIEMPO_VIAJE = body.TIEMPO_VIAJE;
+    var ID_USUARIO_BS = body.ID_USUARIO_BS;
+    var params = `'${CORRELATIVO}','${FECHA}','${FECHA_HORA_FIN}','${FH_TRASLADO}',${ID_CONDUCTOR},${ID_ORDEN_SERVICIO},${ID_REMOLQUE},${ID_TRACTO},'${NRO_GUIA_CLIENTE}','${NRO_PERMISO}','${OBSERVACION}',${PESO_BRUTO},${PESO_NETO},${PESO_TARA},'${SERIAL}',${TIEMPO_VIAJE},${ID_USUARIO_BS},${ID_GUIA}`;
+    var request = new mssql.Request();
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_ASIGNAR_GUIA ${params}`;
+    console.log('ID_USUARIO_BS', ID_USUARIO_BS);
+    console.log('lsql:', lsql);
+    return;
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guia = result.recordset[0];
+            var idGuia = guia.ID_GUIA;
+            if (guia.ID_GUIA === 0) {
+                return res.status(400).send({
+                    ok: true,
+                    message: guia.MESSAGE
+                });    
+            }     
+            return res.status(200).send({
+                ok: true,                                   
+                guia                                 
+            });      
+        }
+    });
+});
+// Update guia
+
 // Get guias
 app.get('/guias/:idUser/:search/:desde/:hasta', mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var idUser = req.params.idUser;
@@ -547,7 +599,50 @@ app.get('/diasproductividadop/:semana/:year/:zona',mdAuthenticattion.verificarTo
                                             if (i==6) {
                                                 diasProductividad[j].dia7 = turnos;
                                             }
-                                        }  
+                                        }
+                                        if (zona == 4) {                                        
+                                            const resultado = diasTurnoProductividad.find( viajes => 
+                                                viajes.PLACA_TRACTO === diasProd.PLACA_TRACTO && viajes.NOMBRE_CONDUCTOR === diasProd.NOMBRE_CONDUCTOR && viajes.FH_GUIA === dia.FECHA 
+                                            );                                            
+                                            var turno1 = 0
+                                            if (resultado) {
+                                                if (resultado.VIAJES) {
+                                                turno1 = resultado.VIAJES
+                                                }
+                                                turnos = {
+                                                    fecha: dia.FECHA,
+                                                    turno1,                                         
+                                                    motivo1: 0                                                  
+                                                };
+                                            } else {
+                                                turnos = {
+                                                    fecha: dia.FECHA,
+                                                    turno1,                                         
+                                                    motivo1: 0                                                  
+                                                };
+                                            }                                     
+                                            if (i==0) {                                               
+                                                diasProductividad[j].dia1 = turnos;
+                                            }
+                                            if (i==1) {                                               
+                                                diasProductividad[j].dia2 = turnos;
+                                            }
+                                            if (i==2) {                                               
+                                                diasProductividad[j].dia3 = turnos;
+                                            }
+                                            if (i==3) {                                               
+                                                diasProductividad[j].dia4 = turnos;
+                                            }
+                                            if (i==4) {                                                
+                                                diasProductividad[j].dia5 = turnos;
+                                            }
+                                            if (i==5) {                                                
+                                                diasProductividad[j].dia6 = turnos;
+                                            }
+                                            if (i==6) {                                                
+                                                diasProductividad[j].dia7 = turnos;
+                                            }
+                                        }
                                     });
                                 });
                                 return res.status(200).send({
@@ -660,7 +755,17 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                                             motivo1 = diasProd.dia1.motivo1;
                                             motivo2 = diasProd.dia1.motivo2;
                                             motivo3 = 0;
-                                        }                            
+                                        } 
+                                        if (zona == 4) {
+                                            arrayFecha = diasProd.dia1.fecha.split('/');
+                                            fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                            turno1 = diasProd.dia1.turno1;
+                                            turno2 = 0;
+                                            turno3 = 0;
+                                            motivo1 = diasProd.dia1.motivo1;
+                                            motivo2 = 0;
+                                            motivo3 = 0;
+                                        }                           
                                     break;  
                                     case 1:
                                         if (zona == 1) {
@@ -693,6 +798,16 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                                             motivo2 = diasProd.dia2.motivo2;
                                             motivo3 = 0;
                                         }
+                                        if (zona == 4) {
+                                            arrayFecha = diasProd.dia2.fecha.split('/');
+                                            fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                            turno1 = diasProd.dia2.turno1;
+                                            turno2 = 0;
+                                            turno3 = 0;
+                                            motivo1 = diasProd.dia2.motivo1;
+                                            motivo2 = 0;
+                                            motivo3 = 0;
+                                        }   
                                     break;                              
                                     case 2:
                                         if (zona == 1) {
@@ -725,6 +840,16 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                                             motivo2 = diasProd.dia3.motivo2;
                                             motivo3 = 0;
                                         }
+                                        if (zona == 4) {
+                                            arrayFecha = diasProd.dia3.fecha.split('/');
+                                            fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                            turno1 = diasProd.dia3.turno1;
+                                            turno2 = 0;
+                                            turno3 = 0;
+                                            motivo1 = diasProd.dia3.motivo1;
+                                            motivo2 = 0;
+                                            motivo3 = 0;
+                                        }    
                                     break;
                                     case 3:
                                         if (zona == 1) {
@@ -757,6 +882,16 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                                             motivo2 = diasProd.dia4.motivo2;
                                             motivo3 = 0;
                                         }
+                                        if (zona == 4) {
+                                            arrayFecha = diasProd.dia4.fecha.split('/');
+                                            fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                            turno1 = diasProd.dia4.turno1;
+                                            turno2 = 0;
+                                            turno3 = 0;
+                                            motivo1 = diasProd.dia4.motivo1;
+                                            motivo2 = 0;
+                                            motivo3 = 0;
+                                        }   
                                     break;
                                     case 4:
                                         if (zona == 1) {
@@ -789,6 +924,16 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                                             motivo2 = diasProd.dia5.motivo2;
                                             motivo3 = 0;
                                         }
+                                        if (zona == 4) {
+                                            arrayFecha = diasProd.dia5.fecha.split('/');
+                                            fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                            turno1 = diasProd.dia5.turno1;
+                                            turno2 = 0;
+                                            turno3 = 0;
+                                            motivo1 = diasProd.dia5.motivo1;
+                                            motivo2 = 0;
+                                            motivo3 = 0;
+                                        }    
                                     break;                            
                                     case 5:
                                         if (zona == 1) {
@@ -821,6 +966,16 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                                             motivo2 = diasProd.dia6.motivo2;
                                             motivo3 = 0;
                                         }
+                                        if (zona == 4) {
+                                            arrayFecha = diasProd.dia6.fecha.split('/');
+                                            fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                            turno1 = diasProd.dia6.turno1;
+                                            turno2 = 0;
+                                            turno3 = 0;
+                                            motivo1 = diasProd.dia6.motivo1;
+                                            motivo2 = 0;
+                                            motivo3 = 0;
+                                        }    
                                     break;
                                     case 6:
                                         if (zona == 1) {
@@ -853,6 +1008,16 @@ app.post('/reportop/:semana/:year/:zona/:idUser', mdAuthenticattion.verificarTok
                                             motivo2 = diasProd.dia7.motivo2;
                                             motivo3 = 0;
                                         }
+                                        if (zona == 4) {
+                                            arrayFecha = diasProd.dia7.fecha.split('/');
+                                            fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                            turno1 = diasProd.dia7.turno1;
+                                            turno2 = 0;
+                                            turno3 = 0;
+                                            motivo1 = diasProd.dia7.motivo1;
+                                            motivo2 = 0;
+                                            motivo3 = 0;
+                                        }   
                                     break;
                                 }
                                 diasProdTurno.push({
@@ -984,7 +1149,17 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                                 motivo1 = diasProd.dia1.motivo1;
                                 motivo2 = diasProd.dia1.motivo2;
                                 motivo3 = 0;
-                            }                            
+                            }   
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }                         
                         break;  
                         case 1:
                             if (zona == 1) {
@@ -1017,6 +1192,16 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                                 motivo2 = diasProd.dia2.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            } 
                         break;                              
                         case 2:
                             if (zona == 1) {
@@ -1049,6 +1234,16 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                                 motivo2 = diasProd.dia3.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            } 
                         break;
                         case 3:
                             if (zona == 1) {
@@ -1081,6 +1276,16 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                                 motivo2 = diasProd.dia4.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
                         break;
                         case 4:
                             if (zona == 1) {
@@ -1113,6 +1318,16 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                                 motivo2 = diasProd.dia5.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
                         break;                            
                         case 5:
                             if (zona == 1) {
@@ -1145,6 +1360,16 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                                 motivo2 = diasProd.dia6.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
                         break;
                         case 6:
                             if (zona == 1) {
@@ -1177,6 +1402,16 @@ app.post('/reportopviajes/:semana/:year/:zona/:idUser/:idReportOp', mdAuthentica
                                 motivo2 = diasProd.dia7.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
                         break;
                     }
                     diasProdTurno.push({
@@ -1299,7 +1534,17 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
                 motivo1 = diasProd.dia1.motivo1;
                 motivo2 = diasProd.dia1.motivo2;
                 motivo3 = 0;
-            }                            
+            }    
+            if (zona == 4) {
+                arrayFecha = diasProd.dia1.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia1.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia1.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }                        
         break;  
         case 1:
             if (zona == 1) {
@@ -1332,6 +1577,16 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
                 motivo2 = diasProd.dia2.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia2.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia2.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia2.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
         break;                              
         case 2:
             if (zona == 1) {
@@ -1364,6 +1619,16 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
                 motivo2 = diasProd.dia3.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia3.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia3.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia3.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }    
         break;
         case 3:
             if (zona == 1) {
@@ -1396,6 +1661,16 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
                 motivo2 = diasProd.dia4.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia4.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia4.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia4.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }  
         break;
         case 4:
             if (zona == 1) {
@@ -1428,6 +1703,16 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
                 motivo2 = diasProd.dia5.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia5.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia5.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia5.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }  
         break;                            
         case 5:
             if (zona == 1) {
@@ -1458,6 +1743,16 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
                 turno3 = 0;
                 motivo1 = diasProd.dia6.motivo1;
                 motivo2 = diasProd.dia6.motivo2;
+                motivo3 = 0;
+            }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia6.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia6.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia6.motivo1;
+                motivo2 = 0;
                 motivo3 = 0;
             }
         break;
@@ -1492,6 +1787,16 @@ app.put('/reportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticattion.v
                 motivo2 = diasProd.dia7.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia7.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia7.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia7.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }  
         break;
     }
     diasProdTurno.push({
@@ -1577,7 +1882,17 @@ app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticatti
                 motivo1 = diasProd.dia1.motivo1;
                 motivo2 = diasProd.dia1.motivo2;
                 motivo3 = 0;
-            }                            
+            } 
+            if (zona == 4) {
+                arrayFecha = diasProd.dia1.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia1.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia1.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }                           
         break;  
         case 1:
             if (zona == 1) {
@@ -1610,6 +1925,16 @@ app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticatti
                 motivo2 = diasProd.dia2.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia2.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia2.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia2.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }  
         break;                              
         case 2:
             if (zona == 1) {
@@ -1642,6 +1967,16 @@ app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticatti
                 motivo2 = diasProd.dia3.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia3.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia3.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia3.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            } 
         break;
         case 3:
             if (zona == 1) {
@@ -1674,6 +2009,16 @@ app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticatti
                 motivo2 = diasProd.dia4.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia4.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia4.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia4.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }  
         break;
         case 4:
             if (zona == 1) {
@@ -1706,6 +2051,16 @@ app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticatti
                 motivo2 = diasProd.dia5.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia5.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia5.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia5.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }   
         break;                            
         case 5:
             if (zona == 1) {
@@ -1738,6 +2093,16 @@ app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticatti
                 motivo2 = diasProd.dia6.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia6.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia6.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia6.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }   
         break;
         case 6:
             if (zona == 1) {
@@ -1770,6 +2135,16 @@ app.put('/detareportop/:semana/:year/:zona/:id/:nroDia/:idUser', mdAuthenticatti
                 motivo2 = diasProd.dia7.motivo2;
                 motivo3 = 0;
             }
+            if (zona == 4) {
+                arrayFecha = diasProd.dia7.fecha.split('/');
+                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                turno1 = diasProd.dia7.turno1;
+                turno2 = 0;
+                turno3 = 0;
+                motivo1 = diasProd.dia7.motivo1;
+                motivo2 = 0;
+                motivo3 = 0;
+            }   
         break;
     }
     diasProdTurno.push({
@@ -1883,7 +2258,17 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
                                 motivo1 = diasProd.dia1.motivo1;
                                 motivo2 = diasProd.dia1.motivo2;
                                 motivo3 = 0;
-                            }                            
+                            }  
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia1.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia1.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia1.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }                          
                         break;  
                         case 1:
                             if (zona == 1) {
@@ -1916,6 +2301,16 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
                                 motivo2 = diasProd.dia2.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia2.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia2.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia2.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }  
                         break;                              
                         case 2:
                             if (zona == 1) {
@@ -1948,6 +2343,16 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
                                 motivo2 = diasProd.dia3.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia3.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia3.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia3.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }  
                         break;
                         case 3:
                             if (zona == 1) {
@@ -1980,6 +2385,16 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
                                 motivo2 = diasProd.dia4.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia4.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia4.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia4.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }   
                         break;
                         case 4:
                             if (zona == 1) {
@@ -2012,6 +2427,16 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
                                 motivo2 = diasProd.dia5.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia5.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia5.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia5.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }     
                         break;                            
                         case 5:
                             if (zona == 1) {
@@ -2044,6 +2469,16 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
                                 motivo2 = diasProd.dia6.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia6.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia6.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia6.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }  
                         break;
                         case 6:
                             if (zona == 1) {
@@ -2076,6 +2511,16 @@ app.put('/reportopdeta/:semana/:year/:zona/:idReportOp/:idUser',mdAuthenticattio
                                 motivo2 = diasProd.dia7.motivo2;
                                 motivo3 = 0;
                             }
+                            if (zona == 4) {
+                                arrayFecha = diasProd.dia7.fecha.split('/');
+                                fecha = arrayFecha[2] + '-' + arrayFecha[1] + '-' + arrayFecha[0];
+                                turno1 = diasProd.dia7.turno1;
+                                turno2 = 0;
+                                turno3 = 0;
+                                motivo1 = diasProd.dia7.motivo1;
+                                motivo2 = 0;
+                                motivo3 = 0;
+                            }    
                         break;
                     }
                     diasProdTurno.push({
@@ -2437,6 +2882,51 @@ app.get('/detareportprodop/:semana/:year/:id',mdAuthenticattion.verificarToken, 
                                                 diasProductividad[j].dia7 = turnos;
                                             }
                                         }  
+                                        if (zona == 4) {                                        
+                                            const resultado = diasTurnoProductividad.find( viajes => 
+                                                viajes.PLACA_TRACTO === diasProd.PLACA_TRACTO && viajes.NOMBRE_CONDUCTOR === diasProd.NOMBRE_CONDUCTOR && viajes.FECHA === dia.FECHA 
+                                            );                                      
+                                            var turno1 = 0;
+                                            var motivo1 = 0;
+                                            if (resultado) {
+                                                motivo1 = resultado.MOTIVO1;
+                                                if (resultado.TURNO1) {
+                                                    turno1 = resultado.TURNO1;
+                                                }
+                                                turnos = {
+                                                    fecha: dia.FECHA,
+                                                    turno1,                                         
+                                                    motivo1                                                 
+                                                };
+                                            } else {
+                                                turnos = {
+                                                    fecha: dia.FECHA,
+                                                    turno1,                                         
+                                                    motivo1: 0                                                  
+                                                };
+                                            }                                     
+                                            if (i==0) {                                               
+                                                diasProductividad[j].dia1 = turnos;
+                                            }
+                                            if (i==1) {                                               
+                                                diasProductividad[j].dia2 = turnos;
+                                            }
+                                            if (i==2) {                                               
+                                                diasProductividad[j].dia3 = turnos;
+                                            }
+                                            if (i==3) {                                               
+                                                diasProductividad[j].dia4 = turnos;
+                                            }
+                                            if (i==4) {                                                
+                                                diasProductividad[j].dia5 = turnos;
+                                            }
+                                            if (i==5) {                                                
+                                                diasProductividad[j].dia6 = turnos;
+                                            }
+                                            if (i==6) {                                                
+                                                diasProductividad[j].dia7 = turnos;
+                                            }
+                                        }
                                     });
                                 });
                                 return res.status(200).send({
@@ -2982,6 +3472,7 @@ app.get('/planificacionOp/:id', mdAuthenticattion.verificarToken, (req, res, nex
 app.get('/planificacionDeta/:idPlanificacion',mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var idPlanificacion = req.params.idPlanificacion;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_GETS_PLANIFICACION_OP_DETA ${idPlanificacion}`;
+    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -3098,5 +3589,36 @@ app.delete('/planificacionOpDeta/:id/:idUsuario', mdAuthenticattion.verificarTok
     });  
 });
 // End Delete planificacion op
+
+// Get guia planificacion
+app.get('/guiaPlanificacion/:idOrden/:idConductor', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var idOrden = req.params.idOrden;
+    var idConductor = req.params.idConductor;
+    var params = `${idOrden}, ${idConductor}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_GUIA_PLANIFICACION ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guiaPlanificacion = result.recordset[0];  
+            if (!guiaPlanificacion) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existen registros disponibles para este conductor.'
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                guiaPlanificacion
+            });
+        }
+    });  
+});
+// End Get planificacion op
 
 module.exports = app;
