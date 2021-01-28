@@ -119,8 +119,6 @@ app.put('/movilidadcond/:idViatico/:idUser', mdAuthenticattion.verificarToken, (
                         ruta = arrayRutaPlaca[0];
                         unidad = arrayRutaPlaca[1];
                       } else {
-                        // console.log('conductor.IDENTIFICACION:', conductor.IDENTIFICACION)
-                        // console.log('resultado.RUTA:', resultado.RUTA)
                       }
 
                       detalles.push({  
@@ -378,7 +376,6 @@ function crearPdf(content, nombreDoc){
     if (err){
       console.log(err);
     } else {
-      // console.log(nombreDoc + '.PDF creado.');
       return 1;
     }
   }); 

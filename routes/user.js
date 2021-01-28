@@ -49,7 +49,6 @@ app.post('/', (req, res) => {
      } 
 
     var params = `'${name}', '${email}', '${password}', '${image}', '${google}', '${phone}', ${idRole}, '${iden}'`;
-    // console.log(params);
     var request = new mssql.Request();
     var lsql = `EXEC REGISTER_USER ${params}`;
     request.query(lsql, (err, result) => {
@@ -151,7 +150,6 @@ app.put('/:id', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var id_role = body.ID_ROLE;
     var iden = body.IDEN;
     var params = `${id}, '${name}', '${email}', '${phone}', ${id_role}, '${iden}'`;
-    // console.log(params);
     var request = new mssql.Request();
     var lsql = `EXEC UPDATE_USER ${params}`;
     var request = new mssql.Request();

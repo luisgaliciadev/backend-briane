@@ -1310,7 +1310,7 @@ app.post('/peaje', mdAuthenticattion.verificarToken, (req, res, next ) => {
                                     ${css}
                                 </style>
                                 <div>
-                                    <h2>Se ha generado una solicitud de peaje</h2>
+                                    <h2>Se ha generado una solicitud de gastos operativos</h2>
                                     <h4>Información de la solicitud:</h4>
                                     <table class="table-peaje"">
                                         <tr>
@@ -1670,7 +1670,7 @@ app.post('/peajefact', mdAuthenticattion.verificarToken, (req, res, next ) => {
     } else {
         var nroDoc = factura.numero.padStart(8 , 0) 
     }
-    var params =  `${factura.idPeaje},${factura.idDetallePeaje},'${nroDoc}',${factura.monto},'${factura.fecha}',${factura.idGuia},${factura.idUser},${factura.idTipoDoc}`;
+    var params =  `${factura.idPeaje},${factura.idDetallePeaje},'${nroDoc}',${factura.monto},'${factura.fecha}',${factura.idGuia},${factura.idUser},${factura.idTipoDoc},${factura.idConceptoGastosOp}`;
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_RELACION_PEAJE_FACTURA ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -1958,7 +1958,7 @@ app.put('/procesarpeaje/:id/:idUser', mdAuthenticattion.verificarToken, (req, re
                     ${css}
                 </style>
                 <div>
-                    <h2>Se ha procesado una solicitud de peaje</h2>
+                    <h2>Se ha procesado una solicitud de gastos operativos</h2>
                     <h4>Información de la solicitud:</h4>
                     <table class="table-peaje"">
                         <tr>

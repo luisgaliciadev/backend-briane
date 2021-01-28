@@ -268,7 +268,6 @@ app.get('/clients/:id/:search', (req, res, next ) => {
   var id = req.params.id;
   var search = req.params.search;
   var params = `${id}, '${search}'`;
-  // console.log(params);
   var lsql = `EXEC GET_CLIENTS ${params}`;
   var request = new mssql.Request();
   request.query(lsql, (err, result) => {
@@ -352,7 +351,6 @@ app.get('/clients/:id/:search', (req, res, next ) => {
       },
     }
     const dataset = clients;
-    // console.log(clients)
     const merges = [
       { start: { row: 2, column: 1 }, end: { row: 2, column: 5 } }
      
@@ -386,9 +384,7 @@ app.get('/clients/:id/:search', (req, res, next ) => {
 app.get('/denuncias/:search', (req, res, next ) => {    
   var search = req.params.search;
   var params = `'${search}'`;
- 
   var lsql = `EXEC GET_DENUNCIAS ${params}`;
-  // console.log(lsql);
   var request = new mssql.Request();
   request.query(lsql, (err, result) => {
       if (err) { 
@@ -468,7 +464,6 @@ app.get('/denuncias/:search', (req, res, next ) => {
       },
     }
     const dataset = denuncias;
-    // console.log(denuncias)
     const merges = [
       { start: { row: 2, column: 1 }, end: { row: 2, column:  4} }
      

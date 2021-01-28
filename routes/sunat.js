@@ -46,9 +46,9 @@ app.post('/consultaruc/:ruc', (req, res, next ) => {
                     const $table = $(".form-table").eq(2);
                     var text = '';
                     $table.find('tr').each((i, el) => {
-                    const a = $(el).find('td[colspan=1]');
-                    const b = $(el).find('td[colspan=3]');
-                    text = text + ' ' + clean(a.text()) + clean(b.text())
+                        const a = $(el).find('td[colspan=1]');
+                        const b = $(el).find('td[colspan=3]');
+                        text = text + ' ' + clean(a.text()) + clean(b.text())
                     });
                     if (text.length < 300 ) {
                         res.status(200).send({
@@ -56,6 +56,7 @@ app.post('/consultaruc/:ruc', (req, res, next ) => {
                             message: 'Datos del RUC no encontrados.'
                         });
                     } else {
+                        
                         var iRuc = text.search("RUC: ");
                         var ifRuc = text.search(" -");
                         var RUC = text.slice(iRuc,ifRuc);
@@ -184,6 +185,7 @@ app.get('/consultaruc/:ruc', (req, res, next ) => {
                     const b = $(el).find('td[colspan=3]');
                     text = text + ' ' + clean(a.text()) + clean(b.text())
                     });
+                   
                     if (text.length < 300 ) {
                         res.status(200).send({
                             ok: true,
@@ -193,35 +195,27 @@ app.get('/consultaruc/:ruc', (req, res, next ) => {
                         var iRuc = text.search("RUC: ");
                         var ifRuc = text.search(" -");
                         var RUC = text.slice(iRuc,ifRuc);
-                        console.log('text:', typeof(text));
-                        // console.log('ruc:', RUC);
                         RUC = RUC.substr(5,12);
-
                         var iRs = text.search("- ");
                         var ifRs = text.search(" Tipo Contribuyente:");
                         var RAZON_SOCIAL = text.slice(iRs,ifRs);
                         RAZON_SOCIAL = RAZON_SOCIAL.substr(2,250);
-
                         var iNc = text.search("Nombre Comercial: ");
                         var ifNc = text.search(" Fecha de Inscripción:");
                         var NOMBRE_COMERCIAL = text.slice(iNc,ifNc);
                         NOMBRE_COMERCIAL = NOMBRE_COMERCIAL.substr(18,250);
-
-                        var iEc = text.search("Estado del Contribuyente: ");
-                        var ifEc = text.search("  Condición del Contribuyente:");
-                        var ESTADO = text.slice(iEc,ifEc);
-                        ESTADO = ESTADO.substr(26,6);
-
-                        var iCc = text.search("Condición del Contribuyente: ");
-                        var ifCc = text.search(" Dirección del Domicilio Fiscal:");
-                        var CONDICION = text.slice(iCc,ifCc);
-                        CONDICION = CONDICION.substr(29,6);
-
-                        var iDc = text.search("Dirección del Domicilio Fiscal:");
-                        var ifDc = text.search(" Sistema de Emisión de Comprobante:");
+                        var iEc = text.search("Estado: ");
+                        var ifEc = text.search("  Condición:");
+                        var ESTADO = text.slice(iEc,ifEc);                       
+                        ESTADO = ESTADO.substr(8,6);
+                        var iCc = text.search("Condición: ");
+                        var ifCc = text.search(" Domicilio Fiscal:");
+                        var CONDICION = text.slice(iCc,ifCc);                        
+                        CONDICION = CONDICION.substr(11,6);
+                        var iDc = text.search("Domicilio Fiscal:");
+                        var ifDc = text.search(" Teléfono");
                         var DIRECCION = text.slice(iDc,ifDc);
-                        DIRECCION = DIRECCION.substr(31,250);
-
+                        DIRECCION = DIRECCION.substr(16,250);
                         var direccion = DIRECCION.split('-');
                         var pProvincia = direccion.length - 2;
                         var pDistrito = direccion.length - 1;

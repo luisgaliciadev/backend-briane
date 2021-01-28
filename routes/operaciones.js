@@ -82,6 +82,77 @@ app.get('/osPlanificacion',mdAuthenticattion.verificarToken, (req, res, next ) =
 });
 // End Get orden servicio confirmadas
 
+// Get Ordenes servicio planificacion
+app.get('/osPlanificaciones/:desde/:hasta/:idZona',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var idZona = req.params.idZona;
+    var params =  `'${desde}','${hasta}',${idZona}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OS_PLANIFICACION_DEMANDA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var ordenesServicio = result.recordset;
+            var demandas = [];
+            var totalViajesEstimados = 0;
+            var totalViajesRealizados = 0;
+            var i = 0;
+            if (ordenesServicio.length > 0) {
+                ordenesServicio.forEach(function (orden) {
+                    if (orden.VIAJES_ESTIMADOS) {
+                        totalViajesEstimados = totalViajesEstimados +  orden.VIAJES_ESTIMADOS;
+                    }
+                    let guiasTotal = 0
+                    if (orden.CANTIDAD_GUIAS_TOTAL) {
+                        guiasTotal = orden.CANTIDAD_GUIAS_TOTAL
+                    }
+                    guiasTotal = guiasTotal + orden.CANTIDAD_GUIAS_TOTAL_PLANIFICADAS;
+                    let cantViajes = orden.VIAJES_ESTIMADOS - guiasTotal;
+                    if (cantViajes > 0) {
+                        let j;
+                        for (j = 0; j < cantViajes; j++) {
+                            i++;
+                            demandas.push({
+                                id: i,
+                                idOrdenServicio: orden.ID_ORDEN_SERVICIO,
+                                ordenServicio: orden.CORRELATIVO,
+                                origen: orden.DS_ORI_DEST,
+                                destino: orden.DESTINO,
+                                producto: orden.DS_PRODUCTO,
+                                ruc: orden.RUC,
+                                razonSocial: orden.RAZON_SOCIAL,
+                                viajesEstimados: orden.VIAJES_ESTIMADOS,
+                                viajesRealizados: orden.CANTIDAD_GUIAS_TOTAL,
+                                seleccion : false
+                            });
+                        }
+                    }
+                });
+                return res.status(200).send({
+                    ok: true,
+                    demandas,
+                    totalOrdenes: ordenesServicio.length,
+                    totalViajesEstimados,
+                    totalViajesRealizados,
+                    totalViajesDemanda: i
+                });
+            } else {
+                return res.status(200).send({
+                    ok: true,
+                    demandas
+                });
+            }
+        }
+    });
+});
+// End Get Ordenes servicio planificacion
+
 // Get Vehiculo
 app.get('/vehiculo/:placa/:tipo', (req, res, next ) => {   
     var placa = req.params.placa;
@@ -269,9 +340,7 @@ app.put('/asignarGuia', mdAuthenticattion.verificarToken, (req, res) => {
     var params = `'${CORRELATIVO}','${FECHA}','${FECHA_HORA_FIN}','${FH_TRASLADO}',${ID_CONDUCTOR},${ID_ORDEN_SERVICIO},${ID_REMOLQUE},${ID_TRACTO},'${NRO_GUIA_CLIENTE}','${NRO_PERMISO}','${OBSERVACION}',${PESO_BRUTO},${PESO_NETO},${PESO_TARA},'${SERIAL}',${TIEMPO_VIAJE},${ID_USUARIO_BS},${ID_GUIA}`;
     var request = new mssql.Request();
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_ASIGNAR_GUIA ${params}`;
-    console.log('ID_USUARIO_BS', ID_USUARIO_BS);
-    console.log('lsql:', lsql);
-    return;
+    // return;
     request.query(lsql, (err, result) => {
         if (err) { 
             return res.status(500).send({
@@ -3472,7 +3541,6 @@ app.get('/planificacionOp/:id', mdAuthenticattion.verificarToken, (req, res, nex
 app.get('/planificacionDeta/:idPlanificacion',mdAuthenticattion.verificarToken, (req, res, next ) => {   
     var idPlanificacion = req.params.idPlanificacion;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_GETS_PLANIFICACION_OP_DETA ${idPlanificacion}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -3492,10 +3560,36 @@ app.get('/planificacionDeta/:idPlanificacion',mdAuthenticattion.verificarToken, 
 });
 // End Get planificacion op deta
 
+// Get planificaciones op deta
+app.get('/planificacionesDeta/:desde/:hasta/:idZona',mdAuthenticattion.verificarToken, (req, res, next ) => {   
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var idZona = req.params.idZona;
+    var params = `'${desde}','${hasta}',${idZona}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_PLANIFICACIONES_OP_DETA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planificacionesDeta = result.recordset;
+            return res.status(200).send({
+                ok: true,
+                planificacionesDeta
+            });
+        }
+    });
+});
+// End Get planificacion op deta
+
 // Register planificacion operaciones deta
 app.post('/planificacionOpDeta', mdAuthenticattion.verificarToken, (req, res, next ) => {    
     var body = req.body;
-    var params = `${body.idOrdenServicio},${body.idTracto},${body.idRemolque},${body.idConductor},${body.idUsuario}`; 
+    var params = `${body.idOrdenServicio},${body.idTracto},${body.idRemolque},${body.idConductor},${body.idUsuario},'${body.fecha}'`; 
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_PLANIFICACION_DETA ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -3620,5 +3714,40 @@ app.get('/guiaPlanificacion/:idOrden/:idConductor', mdAuthenticattion.verificarT
     });  
 });
 // End Get planificacion op
+
+// Update fechas planificacion guia
+app.put('/planificacionOpGuia', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    if (body.fhFinViaje) {
+        var params = `${body.idGuia},'${body.fhInicioViaje}','${body.fhLlegadaPc}','${body.fhFinViaje}',${body.idUsuario}`; 
+    } else {
+        var params = `${body.idGuia},'${body.fhInicioViaje}','${body.fhLlegadaPc}',null,${body.idUsuario}`; 
+    }
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_FECHAS_PLANIFICACION_GUIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var planifiacionOpGuia = result.recordset[0];  
+            var idGuia =  planifiacionOpGuia.ID_GUIA;
+            if (!idGuia) {
+                return res.status(400).send({
+                    ok: false,
+                    message: planifiacionOp.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                planifiacionOpGuia
+            });
+        }
+    });  
+});
+// End Update fechas planificacion guia
 
 module.exports = app;

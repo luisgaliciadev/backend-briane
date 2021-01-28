@@ -66,8 +66,6 @@ async function verify(token) {
 
 app.post('/google', async(req, res) => {
     var token = req.body.token || '';
-    // console.log(token);
-    // return;
     var googleUser = await verify(token)
         .catch(e => {
             return res.status(403).send({
@@ -252,7 +250,6 @@ app.post('/', (req, res) => {
 // Login normal conductor
 app.post('/conductor', (req, res) => {
     var body = req.body;
-    // console.log(body);
     var dni = body.DNI;
     var password = body.PASSWORD;
     var params = `'${dni}', '${password}'`;
