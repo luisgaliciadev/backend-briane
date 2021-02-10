@@ -2406,7 +2406,7 @@ app.post('/descontarsaldospeajes/:idUser', mdAuthenticattion.verificarToken, (re
 });
 // End notificar saldos peaje
 
-// Get conductores
+// Get productividad conductor comsision
 app.get('/conductores/:search', mdAuthenticattion.verificarToken, (req, res, next ) => {       
     var search = req.params.search;
     var params =  `'${search}'`;
@@ -2424,6 +2424,113 @@ app.get('/conductores/:search', mdAuthenticattion.verificarToken, (req, res, nex
             return res.status(200).send({
                 ok: true,
                 conductores
+            });
+        }
+    });  
+});
+// End Get conductores
+
+// Get productividad conductor comsision
+app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {        
+//     var productividad = `
+//     {
+//         "dni": "10091618",
+//         "conductor": "ALVAREZ TINEO RAUL ERNESTO",    
+//         "_01_02_2021": "RANSA PRIMAX= 1"
+//     }
+//    `;
+
+//     // productividad = productividad.substring(1);
+//     var productividaConductor =  JSON.parse('[' + productividad + ']');
+//     return res.status(200).send({
+//         ok: true,
+//         productividaConductor
+//     });
+    
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var idZona = req.params.idZona;
+    var params =  `'${desde}','${hasta}',${idZona}`;
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_PRODUCTIVIDAD_CONDUCTOR_COMISION ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viajes = result.recordset;  
+            var conductores = [];
+            viajes.forEach(viaje => {
+                const resultado = conductores.find( iden => iden.dni === viaje.ID_CONDUCTOR);
+                if(!resultado) {
+                    conductores.push({
+                        dni: viaje.ID_CONDUCTOR,
+                        nombre: viaje.NOMBRE_CONDUCTOR.toUpperCase()
+                    });
+                }
+            });
+            var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA FROM FE_SUPERVAN.DBO.DIAS WHERE FECHA >= '${desde}' AND FECHA <= '${hasta}'`;
+            var request = new mssql.Request();
+            request.query(lsql, (err, result) => {
+                if (err) { 
+                    return res.status(500).send({
+                        ok: false,
+                        message: 'Error en la petición.',
+                        error: err
+                    });
+                } else {
+                    var dias = result.recordset;
+                    var productividad = '';
+                    var detalle = '';
+                    var detalleViajes = '';
+                    var arrayDetalle = [];
+                    var detalleArray = '';
+                    conductores.forEach(conductor => {
+                        dias.forEach(dia => {                            
+                            viajes.forEach(viaje => {
+                                if (dia.FECHA === viaje.FH_GUIA && viaje.ID_CONDUCTOR === conductor.dni) {
+                                    arrayDetalle.push({
+                                        ruta: viaje.DS_ORI_DEST + viaje.DESTINO,
+                                        viajes: viaje.VIAJES
+                                    });
+
+                                    detalleArray = detalleArray +' ' + viaje.DS_ORI_DEST + '= ' + viaje.VIAJES
+                                }
+                            });                                                
+                            detalleViajes = JSON.stringify(arrayDetalle);
+                            detalle = detalle + `,
+                                "${dia.DIA}": ${detalleViajes}
+                            `;  
+                            
+                            // detalle = detalle + `,
+                            //     "${dia.DIA}": "${detalleArray}"
+                            // `;  
+
+                            arrayDetalle = []; 
+                            detalleArray = '';                      
+                        });
+                        detalle = detalle.substring(1);
+                        productividad = productividad + `,{
+                            "dni": "${conductor.dni}",
+                            "conductor": "${conductor.nombre}",
+                            ${detalle}
+                        }`;
+                        detalle = '';
+                        detalle = detalle.substring(1);
+                    });
+                    productividad = productividad.substring(1);
+                    console.log(productividad);
+                    var productividaConductor =  JSON.parse('[' + productividad + ']');
+                    return res.status(200).send({
+                        ok: true,
+                        productividaConductor,
+                        dias,
+                        conductores
+                    });
+                }
             });
         }
     });  

@@ -61,32 +61,26 @@ app.post('/consultaruc/:ruc', (req, res, next ) => {
                         var ifRuc = text.search(" -");
                         var RUC = text.slice(iRuc,ifRuc);
                         RUC = RUC.substr(5,12);
-
                         var iRs = text.search("- ");
                         var ifRs = text.search(" Tipo Contribuyente:");
                         var RAZON_SOCIAL = text.slice(iRs,ifRs);
                         RAZON_SOCIAL = RAZON_SOCIAL.substr(2,250);
-
                         var iNc = text.search("Nombre Comercial: ");
                         var ifNc = text.search(" Fecha de Inscripción:");
                         var NOMBRE_COMERCIAL = text.slice(iNc,ifNc);
                         NOMBRE_COMERCIAL = NOMBRE_COMERCIAL.substr(18,250);
-
-                        var iEc = text.search("Estado del Contribuyente: ");
-                        var ifEc = text.search("  Condición del Contribuyente:");
-                        var ESTADO = text.slice(iEc,ifEc);
-                        ESTADO = ESTADO.substr(26,6);
-
-                        var iCc = text.search("Condición del Contribuyente: ");
-                        var ifCc = text.search(" Dirección del Domicilio Fiscal:");
-                        var CONDICION = text.slice(iCc,ifCc);
-                        CONDICION = CONDICION.substr(29,6);
-
-                        var iDc = text.search("Dirección del Domicilio Fiscal:");
-                        var ifDc = text.search(" Sistema de Emisión de Comprobante:");
+                        var iEc = text.search("Estado: ");
+                        var ifEc = text.search("  Condición:");
+                        var ESTADO = text.slice(iEc,ifEc);                       
+                        ESTADO = ESTADO.substr(8,6);
+                        var iCc = text.search("Condición: ");
+                        var ifCc = text.search(" Domicilio Fiscal:");
+                        var CONDICION = text.slice(iCc,ifCc);                        
+                        CONDICION = CONDICION.substr(11,6);
+                        var iDc = text.search("Domicilio Fiscal:");
+                        var ifDc = text.search(" Teléfono");
                         var DIRECCION = text.slice(iDc,ifDc);
-                        DIRECCION = DIRECCION.substr(31,250);
-
+                        DIRECCION = DIRECCION.substr(17,250);
                         var direccion = DIRECCION.split('-');
                         var pProvincia = direccion.length - 2;
                         var pDistrito = direccion.length - 1;
@@ -215,7 +209,7 @@ app.get('/consultaruc/:ruc', (req, res, next ) => {
                         var iDc = text.search("Domicilio Fiscal:");
                         var ifDc = text.search(" Teléfono");
                         var DIRECCION = text.slice(iDc,ifDc);
-                        DIRECCION = DIRECCION.substr(16,250);
+                        DIRECCION = DIRECCION.substr(17,250);
                         var direccion = DIRECCION.split('-');
                         var pProvincia = direccion.length - 2;
                         var pDistrito = direccion.length - 1;
