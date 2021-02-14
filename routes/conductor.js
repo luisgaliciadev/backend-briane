@@ -2432,26 +2432,40 @@ app.get('/conductores/:search', mdAuthenticattion.verificarToken, (req, res, nex
 
 // Get productividad conductor comsision
 app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {        
-//     var productividad = `
-//     {
-//         "dni": "10091618",
-//         "conductor": "ALVAREZ TINEO RAUL ERNESTO",    
-//         "_01_02_2021": "RANSA PRIMAX= 1"
-//     }
-//    `;
+    // var productividad = `{
+    //         "dni": "10091618",
+    //         "conductor": "ALVAREZ TINEO RAUL ERNESTO",
+    //         "_01_02_2021":{
+    //             "comsision": 34,
+    //             "viajes": 
+    //                     [        
+    //                         {
+    //                             "ruta": "APMDEPSA GAMBETTA",
+    //                             "viajes": 1,
+    //                             "comsion": 20,
+    //                             "comisionTotal": 20
+    //                         },
+    //                         {
+    //                             "ruta": "RANSA ARGENTINAMOLITALIA ECUADOR",
+    //                             "viajes": 1,
+    //                             "comsion": 17,
+    //                             "comisionTotal": 17
+    //                         }
+    //                     ]
+    //         }          
+    //     }`;
 
-//     // productividad = productividad.substring(1);
-//     var productividaConductor =  JSON.parse('[' + productividad + ']');
-//     return res.status(200).send({
-//         ok: true,
-//         productividaConductor
-//     });
+    // // productividad = productividad.substring(1);
+    // var productividaConductor =  JSON.parse('[' + productividad + ']');
+    // return res.status(200).send({
+    //     productividaConductor
+    // });
     
     var desde = req.params.desde;
     var hasta = req.params.hasta;
     var idZona = req.params.idZona;
     var params =  `'${desde}','${hasta}',${idZona}`;
-    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_PRODUCTIVIDAD_CONDUCTOR_COMISION ${params}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_PRODUCTIVIDAD_CONDUCTOR_COMISION ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
@@ -2467,6 +2481,7 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                 const resultado = conductores.find( iden => iden.dni === viaje.ID_CONDUCTOR);
                 if(!resultado) {
                     conductores.push({
+                        id: viaje.ID_CONDUCTOR2,
                         dni: viaje.ID_CONDUCTOR,
                         nombre: viaje.NOMBRE_CONDUCTOR.toUpperCase()
                     });
@@ -2483,52 +2498,117 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                     });
                 } else {
                     var dias = result.recordset;
-                    var productividad = '';
-                    var detalle = '';
-                    var detalleViajes = '';
-                    var arrayDetalle = [];
-                    var detalleArray = '';
-                    conductores.forEach(conductor => {
-                        dias.forEach(dia => {                            
-                            viajes.forEach(viaje => {
-                                if (dia.FECHA === viaje.FH_GUIA && viaje.ID_CONDUCTOR === conductor.dni) {
-                                    arrayDetalle.push({
-                                        ruta: viaje.DS_ORI_DEST + viaje.DESTINO,
-                                        viajes: viaje.VIAJES
-                                    });
+                    var params =  `'${desde}','${hasta}'`;
+                    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_OP_NO_PRODUCTIVIDAD_CONDUCTOR ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var motivos = result.recordset;
+                            var productividad = '';
+                            var detalle = '';
+                            var detalleViajes = '';
+                            var arrayDetalle = [];
+                            var detalleArray = '';
+                            var totalComision = 0; 
+                            var idMotivo = 0;
+                            var motivo = '';
+                            var totalViajesDia = 0;
+                            var viajesTotal = 0;
+                            var comisionTotalConductor = 0;
 
-                                    detalleArray = detalleArray +' ' + viaje.DS_ORI_DEST + '= ' + viaje.VIAJES
-                                }
-                            });                                                
-                            detalleViajes = JSON.stringify(arrayDetalle);
-                            detalle = detalle + `,
-                                "${dia.DIA}": ${detalleViajes}
-                            `;  
-                            
-                            // detalle = detalle + `,
-                            //     "${dia.DIA}": "${detalleArray}"
-                            // `;  
+                            conductores.forEach(conductor => {
+                                dias.forEach(dia => {                            
+                                    viajes.forEach(viaje => {
+                                        if (dia.FECHA === viaje.FH_GUIA && viaje.ID_CONDUCTOR === conductor.dni) {
+                                            var comision = 0;                                           
+                                            viajesTotal = viajesTotal + viaje.VIAJES;
+                                            comisionTotalConductor = comisionTotalConductor + (viaje.VIAJES * comision);
+                                            totalComision = totalComision + (viaje.VIAJES * comision);
+                                            totalViajesDia = totalViajesDia + viaje.VIAJES;
+                                            arrayDetalle.push({
+                                                ruta: viaje.DS_ORI_DEST + ' - ' + viaje.DESTINO,
+                                                viajes: viaje.VIAJES,
+                                                comsion: viaje.COMISION,
+                                                comisionTotal: viaje.VIAJES * comision
+                                            });
+                                            detalleArray = detalleArray +' ' + viaje.DS_ORI_DEST + '= ' + viaje.VIAJES
+                                        }
+                                    });                                       
+                                    // arrayDetalle.forEach(detalle => { 
+                                    //     totalComision = totalComision + detalle.comisionTotal
+                                    //     totalViajesDia = totalViajesDia + 
+                                    // });   
+                                    // arrayDetalle.push({
+                                    //     totalComision: totalComision
+                                    // });    
+                                    
+                                    if (arrayDetalle.length === 0) {
+                                        let arrayFechaDia = dia.FECHA.split('/');
+                                        let fechaDia = arrayFechaDia[2] + '-' + arrayFechaDia[1] + '-' + arrayFechaDia[0];
+                                        const resultadoMotivo = motivos.find(motivo => motivo.ID_CONDUCTOR === conductor.id && motivo.FECHA_MOTIVO  === fechaDia);
+                                        if(resultadoMotivo) {                                            
+                                            idMotivo = resultadoMotivo.ID_MOTIVO_NO_PROD;
+                                            motivo = resultadoMotivo.DS_MOTIVO;
+                                        }
+                                    }
 
-                            arrayDetalle = []; 
-                            detalleArray = '';                      
-                        });
-                        detalle = detalle.substring(1);
-                        productividad = productividad + `,{
-                            "dni": "${conductor.dni}",
-                            "conductor": "${conductor.nombre}",
-                            ${detalle}
-                        }`;
-                        detalle = '';
-                        detalle = detalle.substring(1);
-                    });
-                    productividad = productividad.substring(1);
-                    console.log(productividad);
-                    var productividaConductor =  JSON.parse('[' + productividad + ']');
-                    return res.status(200).send({
-                        ok: true,
-                        productividaConductor,
-                        dias,
-                        conductores
+                                    if (motivo.length === 0) {
+                                        idMotivo = 0;
+                                        motivo = 'NO REGISTRA VIAJES';
+                                    }
+                                                        
+                                    detalleViajes = JSON.stringify(arrayDetalle);
+                                    detalle = detalle + `,
+                                        "${dia.DIA}": {  
+                                            "totalViajes": ${totalViajesDia},                                         
+                                            "totalComision": ${totalComision},
+                                            "idMotivo": ${idMotivo},
+                                            "motivo": "${motivo}",
+                                            "viajes": ${detalleViajes}
+                                        }
+                                    `;  
+                                    // detalle = detalle + `,
+                                    //     "${dia.DIA}": "${detalleArray}"
+                                    // `;  
+                                    arrayDetalle = []; 
+                                    detalleArray = '';    
+                                    totalComision = 0;   
+                                    totalViajesDia = 0;
+                                    idMotivo = 0; 
+                                    motivo = '';              
+                                });
+                                detalle = detalle.substring(1);
+                                productividad = productividad + `,{
+                                    "id": "${conductor.id}",
+                                    "dni": "${conductor.dni}",
+                                    "conductor": "${conductor.nombre}",
+                                    "viajesTotal": ${viajesTotal},
+                                    "comisionTotal": ${comisionTotalConductor},
+                                    ${detalle}
+                                }`;
+                                detalle = '';
+                                totalComision = 0;
+                                viajesTotal = 0;
+                                comisionTotalConductor = 0;
+                                detalle = detalle.substring(1);
+                            });
+                            productividad = productividad.substring(1);
+                            var productividaConductor =  JSON.parse('[' + productividad + ']');
+                            return res.status(200).send({
+                                ok: true,
+                                productividaConductor,
+                                dias,
+                                conductores
+                            });
+
+
+                        }
                     });
                 }
             });
@@ -2536,6 +2616,38 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
     });  
 });
 // End Get conductores
+
+// Register-Update motivo no productividad conductor
+app.post('/motivoNoProductividadConductor', (req, res, next ) => {
+    var body = req.body;
+    var params = `${body.id},${body.idConductor},'${body.motivo.toUpperCase()}','${body.fecha}',${body.idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_UPDATE_OP_NO_PRODUCTIVIDAD_CONDUCTOR ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var motivo = result.recordset[0];      
+            var idMotivo = motivo.ID_MOTIVO_NO_PROD     
+            if (!idMotivo) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No se pudo enviar la notificación.'
+                });  
+            }
+
+            return res.status(200).send({
+                ok: true,
+                motivo
+            });   
+        }
+    });
+});
+// End Register-Update motivo no productividad conductor
   
 module.exports = app;
 
