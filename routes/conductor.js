@@ -2526,7 +2526,12 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                                 dias.forEach(dia => {                            
                                     viajes.forEach(viaje => {
                                         if (dia.FECHA === viaje.FH_GUIA && viaje.ID_CONDUCTOR === conductor.dni) {
-                                            var comision = 0;                                           
+                                            var comision = 0;
+                                            if (viaje.FG_PAGO_DOBLE === 1) {                                               
+                                               comision = viaje.COMISION * 2;
+                                           } else {
+                                                comision = viaje.COMISION;
+                                           }
                                             viajesTotal = viajesTotal + viaje.VIAJES;
                                             comisionTotalConductor = comisionTotalConductor + (viaje.VIAJES * comision);
                                             totalComision = totalComision + (viaje.VIAJES * comision);
@@ -2552,9 +2557,11 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                                         let arrayFechaDia = dia.FECHA.split('/');
                                         let fechaDia = arrayFechaDia[2] + '-' + arrayFechaDia[1] + '-' + arrayFechaDia[0];
                                         const resultadoMotivo = motivos.find(motivo => motivo.ID_CONDUCTOR === conductor.id && motivo.FECHA_MOTIVO  === fechaDia);
-                                        if(resultadoMotivo) {                                            
+                                        if(resultadoMotivo) {
+                                            // console.log('resultadoMotivo: ', resultadoMotivo);
                                             idMotivo = resultadoMotivo.ID_MOTIVO_NO_PROD;
                                             motivo = resultadoMotivo.DS_MOTIVO;
+                                            // console.log('motivo: ', motivo);
                                         }
                                     }
 
