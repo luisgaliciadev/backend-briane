@@ -2432,35 +2432,6 @@ app.get('/conductores/:search', mdAuthenticattion.verificarToken, (req, res, nex
 
 // Get productividad conductor comsision
 app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {        
-    // var productividad = `{
-    //         "dni": "10091618",
-    //         "conductor": "ALVAREZ TINEO RAUL ERNESTO",
-    //         "_01_02_2021":{
-    //             "comsision": 34,
-    //             "viajes": 
-    //                     [        
-    //                         {
-    //                             "ruta": "APMDEPSA GAMBETTA",
-    //                             "viajes": 1,
-    //                             "comsion": 20,
-    //                             "comisionTotal": 20
-    //                         },
-    //                         {
-    //                             "ruta": "RANSA ARGENTINAMOLITALIA ECUADOR",
-    //                             "viajes": 1,
-    //                             "comsion": 17,
-    //                             "comisionTotal": 17
-    //                         }
-    //                     ]
-    //         }          
-    //     }`;
-
-    // // productividad = productividad.substring(1);
-    // var productividaConductor =  JSON.parse('[' + productividad + ']');
-    // return res.status(200).send({
-    //     productividaConductor
-    // });
-    
     var desde = req.params.desde;
     var hasta = req.params.hasta;
     var idZona = req.params.idZona;
@@ -2520,8 +2491,7 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                             var motivo = '';
                             var totalViajesDia = 0;
                             var viajesTotal = 0;
-                            var comisionTotalConductor = 0;
-
+                            var comisionTotalConductor = 0;                            
                             conductores.forEach(conductor => {
                                 dias.forEach(dia => {                            
                                     viajes.forEach(viaje => {
@@ -2557,11 +2527,9 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                                         let arrayFechaDia = dia.FECHA.split('/');
                                         let fechaDia = arrayFechaDia[2] + '-' + arrayFechaDia[1] + '-' + arrayFechaDia[0];
                                         const resultadoMotivo = motivos.find(motivo => motivo.ID_CONDUCTOR === conductor.id && motivo.FECHA_MOTIVO  === fechaDia);
-                                        if(resultadoMotivo) {
-                                            // console.log('resultadoMotivo: ', resultadoMotivo);
+                                        if(resultadoMotivo) {                                           
                                             idMotivo = resultadoMotivo.ID_MOTIVO_NO_PROD;
                                             motivo = resultadoMotivo.DS_MOTIVO;
-                                            // console.log('motivo: ', motivo);
                                         }
                                     }
 
@@ -2613,8 +2581,6 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                                 dias,
                                 conductores
                             });
-
-
                         }
                     });
                 }
@@ -2639,11 +2605,11 @@ app.post('/motivoNoProductividadConductor', (req, res, next ) => {
             });
         } else {
             var motivo = result.recordset[0];      
-            var idMotivo = motivo.ID_MOTIVO_NO_PROD     
+            var idMotivo = motivo.ID_MOTIVO_NO_PROD;     
             if (!idMotivo) {
                 return res.status(400).send({
                     ok: false,
-                    message: 'No se pudo enviar la notificación.'
+                    error: motivo.MESSAGE
                 });  
             }
 

@@ -3750,4 +3750,188 @@ app.put('/planificacionOpGuia', mdAuthenticattion.verificarToken, (req, res, nex
 });
 // End Update fechas planificacion guia
 
+// Get productividad tracto tarifa
+app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', (req, res, next ) => {        
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var idZona = req.params.idZona;
+    var params =  `'${desde}','${hasta}',${idZona}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_PRODUCTIVIDAD_TRACTO ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viajes = result.recordset;  
+            var tractos = [];
+            viajes.forEach(viaje => {
+                const resultado = tractos.find( placa => placa.placa === viaje.PLACA_TRACTO);
+                if(!resultado) {
+                    tractos.push({
+                        id: viaje.ID_TRACTO,
+                        placa: viaje.PLACA_TRACTO
+                    });
+                }
+            });
+
+            var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA FROM FE_SUPERVAN.DBO.DIAS WHERE FECHA >= '${desde}' AND FECHA <= '${hasta}'`;
+            var request = new mssql.Request();
+            request.query(lsql, (err, result) => {
+                if (err) { 
+                    return res.status(500).send({
+                        ok: false,
+                        message: 'Error en la petición.',
+                        error: err
+                    });
+                } else {
+                    var dias = result.recordset;
+                    var params =  `'${desde}','${hasta}'`;
+                    var lsql = `FE_SUPERVAN.DBO.SP_GET_OP_OP_NO_PRODUCTIVIDAD_TRACTO ${params}`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var motivos = result.recordset;
+                            var productividad = '';
+                            var detalle = '';
+                            var detalleViajes = '';
+                            var arrayDetalle = [];
+                            var detalleArray = '';
+                            var totalTarifa = 0; 
+                            var idMotivo = 0;
+                            var motivo = '';
+                            var totalViajesDia = 0;
+                            var viajesTotal = 0;
+                            var tarifaTotalTracto = 0;                            
+                            tractos.forEach(tracto => {
+                                dias.forEach(dia => {                            
+                                    viajes.forEach(viaje => {
+                                        if (dia.FECHA === viaje.FH_GUIA && viaje.PLACA_TRACTO === tracto.placa) {
+                                            var tarifa = 0;
+                                            tarifa = viaje.TARIFA;
+                                            viajesTotal = viajesTotal + viaje.VIAJES;
+                                            tarifaTotalTracto = tarifaTotalTracto + (viaje.VIAJES * tarifa * viaje.CANTIDAD);
+                                            totalTarifa = totalTarifa + (viaje.VIAJES * tarifa * viaje.CANTIDAD);
+                                            totalViajesDia = totalViajesDia + viaje.VIAJES;
+                                            arrayDetalle.push({
+                                                ruta: viaje.DS_ORI_DEST + ' - ' + viaje.DESTINO,
+                                                viajes: viaje.VIAJES,
+                                                comsion: viaje.TARIFA,
+                                                tarifaTotal: new Intl.NumberFormat().format(parseFloat(viaje.VIAJES * tarifa * viaje.CANTIDAD).toFixed(2)) 
+                                            });
+                                            detalleArray = detalleArray +' ' + viaje.DS_ORI_DEST + '= ' + viaje.VIAJES        
+                                        }
+                                    });                                       
+                                                                       
+                                    if (arrayDetalle.length === 0) {
+                                        let arrayFechaDia = dia.FECHA.split('/');
+                                        let fechaDia = arrayFechaDia[2] + '-' + arrayFechaDia[1] + '-' + arrayFechaDia[0];
+                                        const resultadoMotivo = motivos.find(motivo => motivo.ID_TRACTO === tracto.id && motivo.FECHA_MOTIVO  === fechaDia);
+                                        if(resultadoMotivo) {                                           
+                                            idMotivo = resultadoMotivo.ID_NO_PRODUCTIVIDAD_TRACTO;
+                                            motivo = resultadoMotivo.DS_MOTIVO;
+                                        }
+                                    }
+
+                                    if (motivo.length === 0) {
+                                        idMotivo = 0;
+                                        motivo = 'NO REGISTRA VIAJES';
+                                    }
+                                                        
+                                    detalleViajes = JSON.stringify(arrayDetalle);
+                                    totalTarifa =  new Intl.NumberFormat().format(parseFloat(totalTarifa).toFixed(2));
+                                    detalle = detalle + `,
+                                        "${dia.DIA}": {  
+                                            "totalViajes": ${totalViajesDia},                                         
+                                            "totalTarifa": "${totalTarifa}",
+                                            "idMotivo": ${idMotivo},
+                                            "motivo": "${motivo}",
+                                            "viajes": ${detalleViajes}
+                                        }
+                                    `;  
+                                    // detalle = detalle + `,
+                                    //     "${dia.DIA}": "${detalleArray}"
+                                    // `;  
+                                    arrayDetalle = []; 
+                                    detalleArray = '';    
+                                    totalTarifa = 0;   
+                                    totalViajesDia = 0;
+                                    idMotivo = 0; 
+                                    motivo = '';              
+                                });
+                                detalle = detalle.substring(1);
+                                tarifaTotalTracto = new Intl.NumberFormat().format(parseFloat(tarifaTotalTracto).toFixed(2));
+                                productividad = productividad + `,{
+                                    "id": "${tracto.id}",
+                                    "placa": "${tracto.placa}",
+                                    "viajesTotal": ${viajesTotal},
+                                    "tarifaTotal": "${tarifaTotalTracto}",
+                                    ${detalle}
+                                }`;
+                                detalle = '';
+                                totalTarifa = 0;
+                                viajesTotal = 0;
+                                tarifaTotalTracto = 0;
+                                detalle = detalle.substring(1);
+                            });
+                            productividad = productividad.substring(1);
+                            var productividaTracto =  JSON.parse('[' + productividad + ']');
+                            return res.status(200).send({
+                                ok: true,
+                                productividaTracto,
+                                dias,
+                                tractos
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });  
+});
+// End Get productividad tracto tarifa
+
+// Register-Update motivo no productividad tracto
+app.post('/motivoNoProductividadTracto', (req, res, next ) => {
+    var body = req.body;
+    var params = `${body.id},${body.idConductor},'${body.motivo.toUpperCase()}','${body.fecha}',${body.idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_UPDATE_OP_NO_PRODUCTIVIDAD_TRACTO ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var motivo = result.recordset[0];   
+            var idMotivo = motivo.ID_NO_PRODUCTIVIDAD_TRACTO;    
+            if (!idMotivo) {
+                return res.status(400).send({
+                    ok: false,
+                    error: motivo.MESSAGE
+                });  
+            }
+
+            return res.status(200).send({
+                ok: true,
+                motivo
+            });   
+        }
+    });
+});
+// End Register-Update motivo no productividad tracto
+  
+
 module.exports = app;
