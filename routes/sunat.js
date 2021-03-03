@@ -118,7 +118,6 @@ app.post('/consultaruc/:ruc', (req, res, next ) => {
                                 }
                                 return res.status(200).send({
                                     ok: true,
-                                    ok: true,
                                     RUC: RUC,
                                     RAZON_SOCIAL: RAZON_SOCIAL,
                                     NOMBRE_COMERCIAL: NOMBRE_COMERCIAL,
@@ -137,7 +136,7 @@ app.post('/consultaruc/:ruc', (req, res, next ) => {
                         });
                     }
                 } else {
-                    res.status(200).send({
+                    res.status(400).send({
                         ok: true,
                         message: 'Tiempo de respuesta agotado, intente de nuevo.'
                     });
@@ -247,7 +246,6 @@ app.get('/consultaruc/:ruc', (req, res, next ) => {
                                 }
                                 return res.status(200).send({
                                     ok: true,
-                                    ok: true,
                                     RUC: RUC,
                                     RAZON_SOCIAL: RAZON_SOCIAL,
                                     NOMBRE_COMERCIAL: NOMBRE_COMERCIAL,
@@ -266,7 +264,7 @@ app.get('/consultaruc/:ruc', (req, res, next ) => {
                         });
                     }
                 } else {
-                    res.status(200).send({
+                    res.status(400).send({
                         ok: true,
                         message: 'Tiempo de respuesta agotado, intente de nuevo.'
                     });

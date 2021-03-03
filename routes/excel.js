@@ -1221,6 +1221,432 @@ app.get('/documentosConductor', mdAuthenticattion.verificarToken, (req, res, nex
 });
 // End Get documentos unidades
 
+// Get peajes facturas conductor
+app.get('/peajefact/:idDeta', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+  var idDeta = req.params.idDeta;
+  var params =  `${idDeta}`;
+  var lsql = `FE_SUPERVAN.DBO.SP_OP_RELACION_PEAJE_FACTURAS ${params}`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+        return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+        });
+    } else {            
+      var peajesFacturas = result.recordset;   
+      // You can define styles as json object
+      const styles = {
+        header: {          
+          fill: {
+            fgColor: {
+              rgb: '3393FF'
+            }
+          },
+          font: {
+            color: {
+              rgb: 'FFFFFFFF'
+            },
+            sz: 12,
+            bold: true,
+            // underline: true,
+            margin: 'center'
+            // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
+          }
+        },
+        cellPink: {
+          fill: {
+            fgColor: {
+              rgb: 'FFFFCCFF'
+            }
+          }
+        },
+        cellGreen: {
+          fill: {
+            fgColor: {
+              rgb: 'FF00FF00'
+            }
+          }
+        },
+        info: {          
+          font: {
+            sz: 12,
+            bold: true
+          }
+        }
+      };
+      
+      //Array of objects representing heading rows (very top)
+      const heading = [
+        [''],
+        [{value: `Gastos Operativos | Conductor: ${peajesFacturas[0].IDENTIFICACION} - ${peajesFacturas[0].NOMBRE_APELLIDO}`, style: styles.header}],
+        [''], // <-- It can be only values
+        [{value: `Nro. Solicitud: ${peajesFacturas[0].ID_PEAJE}`, style: styles.info}],
+        [{value: `Fecha Solicitud: ${peajesFacturas[0].FH_SOLICITUD}`, style: styles.info}],
+        [{value: `Nro. Orden Servicio: ${peajesFacturas[0].NRO_OS}`, style: styles.info}],
+        [''] // <-- It can be only values
+      ];       
+      //Here you specify the export structure
+      const specification = {
+        ITEMS: { // <- the key should match the actual data key
+          displayName: 'ITEMS', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 50 // <- width in pixels
+        },
+        DS_TIPO_CONCEPTO_OP: { // <- the key should match the actual data key
+          displayName: 'CONCEPTO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 150 // <- width in pixels
+        },
+        DS_TIPO_DOC_PEAJE: { // <- the key should match the actual data key
+          displayName: 'TIPO DOCUMENTO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 150 // <- width in pixels
+        },
+        NRO_COMPROBANTE: { // <- the key should match the actual data key
+          displayName: 'NRO. DOCCUMENTO/REFERENCIA', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 210 // <- width in pixels
+        },
+        FECHA: { // <- the key should match the actual data key
+          displayName: 'FECHA', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 80 // <- width in pixels
+        },
+        MONTO_COMPROBANTE: { // <- the key should match the actual data key
+          displayName: 'MONTO S/', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 80 // <- width in pixels
+        },
+        CORRELATIVO: { // <- the key should match the actual data key
+          displayName: 'NRO. GUIA', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+      }
+      const dataset = peajesFacturas;
+      const merges = [
+        { start: { row: 2, column: 1 }, end: { row: 2, column:  7} }
+      ]
+      const report = excel.buildExport(
+        [ 
+          {
+            name: 'Report', // <- Specify sheet name (optional)
+            heading: heading, // <- Raw heading array (optional)
+            merges: merges, // <- Merge cell ranges
+            specification: specification, // <- Report specification
+            data: dataset // <-- Report data
+          }
+        ]
+      ); 
+      res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+      return res.status(200).send(report);
+    }
+  });
+});
+// End Get peajes facturas conductor
+
+// Get peajes facturas conductor total
+app.get('/peajeFactTotal/:idPeaje', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+  var idPeaje = req.params.idPeaje;
+  var params =  `${idPeaje}`;
+  var lsql = `FE_SUPERVAN.DBO.SP_OP_RELACION_PEAJE_FACTURAS_TOTAL ${params}`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+        return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+        });
+    } else {            
+      var peajesFacturas = result.recordset;   
+      // You can define styles as json object
+      const styles = {
+        header: {          
+          fill: {
+            fgColor: {
+              rgb: '3393FF'
+            }
+          },
+          font: {
+            color: {
+              rgb: 'FFFFFFFF'
+            },
+            sz: 12,
+            bold: true,
+            // underline: true,
+            margin: 'center'
+            // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
+          }
+        },
+        cellPink: {
+          fill: {
+            fgColor: {
+              rgb: 'FFFFCCFF'
+            }
+          }
+        },
+        cellGreen: {
+          fill: {
+            fgColor: {
+              rgb: 'FF00FF00'
+            }
+          }
+        },
+        info: {          
+          font: {
+            sz: 12,
+            bold: true
+          }
+        }
+      };
+      
+      //Array of objects representing heading rows (very top)
+      let nroSolicitud = '';
+      let fechaSolicitud = '';
+      let nroOrdenServicio = '';
+
+      if (peajesFacturas.length > 0) {
+        nroSolicitud = peajesFacturas[0].ID_PEAJE;
+        fechaSolicitud = peajesFacturas[0].FH_SOLICITUD;
+        nroOrdenServicio = peajesFacturas[0].NRO_OS;
+      }
+
+
+      const heading = [
+        [''],
+        [{value: `GASTOS OPERATIVOS`, style: styles.header}],
+        [''], // <-- It can be only values
+        [{value: `Nro. Solicitud: ${nroSolicitud}`, style: styles.info}],
+        [{value: `Fecha Solicitud: ${fechaSolicitud}`, style: styles.info}],
+        [{value: `Nro. Orden Servicio: ${nroOrdenServicio}`, style: styles.info}],
+        [''] // <-- It can be only values
+      ];       
+      //Here you specify the export structure
+      const specification = {
+        ITEMS: { // <- the key should match the actual data key
+          displayName: 'ITEMS', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 50 // <- width in pixels
+        },
+        IDENTIFICACION: { // <- the key should match the actual data key
+          displayName: 'DNI', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 80 // <- width in pixels
+        },
+        NOMBRE_APELLIDO: { // <- the key should match the actual data key
+          displayName: 'CONDUCTOR', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 250 // <- width in pixels
+        },
+        DS_TIPO_CONCEPTO_OP: { // <- the key should match the actual data key
+          displayName: 'CONCEPTO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+        DS_TIPO_DOC_PEAJE: { // <- the key should match the actual data key
+          displayName: 'TIPO DOCUMENTO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 120 // <- width in pixels
+        },
+        NRO_COMPROBANTE: { // <- the key should match the actual data key
+          displayName: 'NRO. DOCCUMENTO/REFERENCIA', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 210 // <- width in pixels
+        },
+        FECHA: { // <- the key should match the actual data key
+          displayName: 'FECHA', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 80 // <- width in pixels
+        },
+        MONTO_COMPROBANTE: { // <- the key should match the actual data key
+          displayName: 'MONTO S/', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 80 // <- width in pixels
+        },
+        CORRELATIVO: { // <- the key should match the actual data key
+          displayName: 'NRO. GUIA', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+      }
+      const dataset = peajesFacturas;
+      const merges = [
+        { start: { row: 2, column: 1 }, end: { row: 2, column:  9} }
+      ]
+      const report = excel.buildExport(
+        [ 
+          {
+            name: 'Report', // <- Specify sheet name (optional)
+            heading: heading, // <- Raw heading array (optional)
+            merges: merges, // <- Merge cell ranges
+            specification: specification, // <- Report specification
+            data: dataset // <-- Report data
+          }
+        ]
+      ); 
+      res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+      return res.status(200).send(report);
+    }
+  });
+});
+// End Get peajes facturas conductor total
+
+// Get peajes deta conductor
+app.get('/peajesDeta/:search/:desde/:hasta', mdAuthenticattion.verificarToken, (req, res, next ) => {       
+  var search = req.params.search;
+  var desde = req.params.desde;
+  var hasta = req.params.hasta;
+  var params =  `'${search}','${desde}','${hasta}'`;
+  var lsql = `FE_SUPERVAN.DBO.SP_VIEW_OP_PEAJES_DETA_CONDUCTOR ${params}`;
+  var request = new mssql.Request();
+  request.query(lsql, (err, result) => {
+    if (err) { 
+        return res.status(500).send({
+            ok: false,
+            message: 'Error en la petición.',
+            error: err
+        });
+    } else {            
+      var peajesDeta = result.recordset;   
+      // You can define styles as json object
+      const styles = {
+        header: {          
+          fill: {
+            fgColor: {
+              rgb: '3393FF'
+            }
+          },
+          font: {
+            color: {
+              rgb: 'FFFFFFFF'
+            },
+            sz: 12,
+            bold: true,
+            // underline: true,
+            margin: 'center'
+            // numberFormat: '$#,##0.00; ($#,##0.00); -',
+          },
+          alignment: {
+            horizontal: "center"
+          }
+        },
+        cellPink: {
+          fill: {
+            fgColor: {
+              rgb: 'FFFFCCFF'
+            }
+          }
+        },
+        cellGreen: {
+          fill: {
+            fgColor: {
+              rgb: 'FF00FF00'
+            }
+          }
+        },
+        info: {          
+          font: {
+            sz: 12,
+            bold: true
+          }
+        }
+      };
+      
+      //Array of objects representing heading rows (very top)
+      const heading = [
+        [''],
+        [{value: `Detalle de Solicitud de Gatos Operativos`, style: styles.header}],
+        [''] // <-- It can be only values
+      ];       
+      //Here you specify the export structure
+      const specification = {
+        ITEMS: { // <- the key should match the actual data key
+          displayName: 'ITEMS', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 50 // <- width in pixels
+        },
+        ID_PEAJE: { // <- the key should match the actual data key
+          displayName: 'NRO. SOLICITUD', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+        FH_SOLICITUD: { // <- the key should match the actual data key
+          displayName: 'FECHA', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+        IDENTIFICACION: { // <- the key should match the actual data key
+          displayName: 'DNI', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 80 // <- width in pixels
+        },
+        NOMBRE_APELLIDO: { // <- the key should match the actual data key
+          displayName: 'CONDUCTOR', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 300 // <- width in pixels
+        },
+        MONTO: { // <- the key should match the actual data key
+          displayName: 'MONTO S/', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+        ESTADO: { // <- the key should match the actual data key
+          displayName: 'ESTATUS', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 100 // <- width in pixels
+        },
+        CORRELATIVO: { // <- the key should match the actual data key
+          displayName: 'NRO. ORDEN SERVICIO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 150 // <- width in pixels
+        },
+        RAZON_SOCIAL: { // <- the key should match the actual data key
+          displayName: 'CLIENTE', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 300 // <- width in pixels
+        },
+        ORIGEN: { // <- the key should match the actual data key
+          displayName: 'ORIGEN', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 200 // <- width in pixels
+        },
+        DESTINO: { // <- the key should match the actual data key
+          displayName: 'DESTINO', // <- Here you specify the column header
+          headerStyle: styles.header, // <- Header style     
+          width: 200 // <- width in pixels
+        },
+      }
+      const dataset = peajesDeta;
+      const merges = [
+        { start: { row: 2, column: 1 }, end: { row: 2, column:  11} }
+      ]
+      const report = excel.buildExport(
+        [ 
+          {
+            name: 'Report', // <- Specify sheet name (optional)
+            heading: heading, // <- Raw heading array (optional)
+            merges: merges, // <- Merge cell ranges
+            specification: specification, // <- Report specification
+            data: dataset // <-- Report data
+          }
+        ]
+      ); 
+      res.attachment('report.xlsx'); // This is sails.js specific (in general you need to set headers)
+      return res.status(200).send(report);
+    }
+  });
+});
+// End Get peajes deta conductor
+
 // Conductor
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

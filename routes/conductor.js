@@ -76,6 +76,79 @@ app.get('/viajeshorascomision/:desde/:hasta/:dni/:search/:zona', mdAuthenticatti
 });
 // End Vijes-horas-comision conductores 
 
+// Get Vijes diferencia de peso por conductor
+app.get('/viajesDiferenciaPeso/:desde/:hasta/:dni/',  (req, res) => {
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var dni = req.params.dni;  
+    var params = `'${desde}', '${hasta}', '${dni}'`;
+    var request = new mssql.Request();
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_VIAJES_DIFERENCIA_PESO ${params}`;
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viajes = result.recordset;
+            var totalPesoNeto = 0;
+            var totalDiferenciaPeso = 0;
+            var viajesDifPeso = [];
+            viajes.forEach(function (viaje) {
+                totalPesoNeto = totalPesoNeto + viaje.PESO_NETO;
+                totalDiferenciaPeso = totalDiferenciaPeso + viaje.DIFERENCIA;
+                viajesDifPeso.push({
+                    CORRELATIVO: viaje.CORRELATIVO,
+                    ID_GUIA: viaje.ID_GUIA,
+                    DIA: viaje.DIA,
+                    MES: viaje.MES,
+                    ANIO: viaje.ANIO,
+                    PESO_NETO: formatoNumero(viaje.PESO_NETO,0,'.',','),
+                    PESO_LLEGADA: formatoNumero(viaje.PESO_LLEGADA,0,'.',','),
+                    DIFERENCIA: formatoNumero(viaje.DIFERENCIA,0,'.',','),
+                    ID_MOTIVO_DESCARGO: viaje.ID_MOTIVO_DESCARGO
+                });
+            });
+            return res.status(200).send({
+                ok: true, 
+                viajes: viajesDifPeso,
+                totalPesoNeto:  formatoNumero(totalPesoNeto,2,'.',','),
+                totalDiferenciaPeso: formatoNumero(totalDiferenciaPeso,2,'.',',')
+            });                       
+        }
+    });
+});
+// End Get Vijes diferencia de peso
+
+// Get Vijes diferencia 
+app.get('/viajesDiferenciaPesoTotal/:search/:desde/:hasta',  (req, res) => {
+    var search = req.params.search;
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var dni = req.params.dni;  
+    var params = `'${search}','${desde}', '${hasta}'`;
+    var request = new mssql.Request();
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_VIAJES_DIFERENCIA_PESO_ALL ${params}`;
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var viajes = result.recordset;
+            return res.status(200).send({
+                ok: true, 
+                viajes
+            });                       
+        }
+    });
+});
+// End Get Vijes diferencia
+
 // Get Vijes conductores 
 app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', (req, res) => {
     var desde = req.params.desde;
@@ -112,7 +185,7 @@ app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', (req, res) => {
         }
     });
 });
-// End Vijes conductores 
+// End Get Vijes conductores
 
 // // Get Vijes conductores 
 // app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', (req, res) => {
@@ -2621,6 +2694,48 @@ app.post('/motivoNoProductividadConductor', (req, res, next ) => {
     });
 });
 // End Register-Update motivo no productividad conductor
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// Funciones 
+function formatoNumero(numero, decimales, separadorDecimal, separadorMiles) {
+    var partes, array;
+    if ( !isFinite(numero) || isNaN(numero = parseFloat(numero)) ) {
+        return "";
+    }
+    if (typeof separadorDecimal==="undefined") {
+        separadorDecimal = ",";
+    }
+    if (typeof separadorMiles==="undefined") {
+        separadorMiles = "";
+    }
+    // Redondeamos
+    if ( !isNaN(parseInt(decimales)) ) {
+        if (decimales >= 0) {
+            numero = numero.toFixed(decimales);
+        } else {
+            numero = (
+                Math.round(numero / Math.pow(10, Math.abs(decimales))) * Math.pow(10, Math.abs(decimales))
+            ).toFixed();
+        }
+    } else {
+        numero = numero.toString();
+    }
+    // Damos formato
+    partes = numero.split(".", 2);
+    array = partes[0].split("");
+    for (var i=array.length-3; i>0 && array[i-1]!=="-"; i-=3) {
+        array.splice(i, 0, separadorMiles);
+    }
+    numero = array.join("");
+    if (partes.length>1) {
+        numero += separadorDecimal + partes[1];
+    }
+    return numero;
+}
+
+// Funciones 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
   
 module.exports = app;
 

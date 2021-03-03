@@ -923,7 +923,7 @@ app.post('/ruta', (req, res, next ) => {
     let destinoHoras = body.DESTINO_HORAS.substring(0,2) + ':' + body.DESTINO_HORAS.substring(2);
     let ingresoOrigen = body.INGRESO_ORIGEN.substring(0,2) + ':' + body.INGRESO_ORIGEN.substring(2);
     let ingresoDestino = body.INGRESO_DESTINO.substring(0,2) + ':' + body.INGRESO_DESTINO.substring(2); 
-    var params = `'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS},'${horaInicio}','${horaFin}',${body.KM},'${idaHoras}','${retornoHoras}','${origenHoras}','${destinoHoras}','${body.LEADTIME_HORAS}',${body.LEADTIME_DIAS},${body.COSTO_ESTIBA},${body.PEAJES},${body.COMBUSTIBLE_GLNS},${body.REDIMIENTO_KM_GLNS},'${ingresoOrigen}','${ingresoDestino}'`;
+    var params = `'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS},'${horaInicio}','${horaFin}',${body.KM},'${idaHoras}','${retornoHoras}','${origenHoras}','${destinoHoras}','${body.LEADTIME_HORAS}',${body.LEADTIME_DIAS},${body.COSTO_ESTIBA},${body.PEAJES},${body.COMBUSTIBLE_GLNS},${body.REDIMIENTO_KM_GLNS},'${ingresoOrigen}','${ingresoDestino}',${body.COMISION}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_RUTA ${params}`;
     var request = new mssql.Request();
     request.query(lsql,  (err, result) => {
@@ -1115,7 +1115,7 @@ app.put('/ruta', mdAuthenticattion.verificarToken, (req, res, next ) => {
     let destinoHoras = body.DESTINO_HORAS.substring(0,2) + ':' + body.DESTINO_HORAS.substring(2);    
     let ingresoOrigen = body.INGRESO_ORIGEN.substring(0,2) + ':' + body.INGRESO_ORIGEN.substring(2);
     let ingresoDestino = body.INGRESO_DESTINO.substring(0,2) + ':' + body.INGRESO_DESTINO.substring(2);  
-    var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS},'${horaInicio}','${horaFin}',${body.KM},'${idaHoras}','${retornoHoras}','${origenHoras}','${destinoHoras}','${body.LEADTIME_HORAS}',${body.LEADTIME_DIAS},${body.COSTO_ESTIBA},${body.PEAJES},${body.COMBUSTIBLE_GLNS},${body.REDIMIENTO_KM_GLNS},'${ingresoOrigen}','${ingresoDestino}'`;
+    var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO},${body.ID_TIPO_COBRO_OS},'${horaInicio}','${horaFin}',${body.KM},'${idaHoras}','${retornoHoras}','${origenHoras}','${destinoHoras}','${body.LEADTIME_HORAS}',${body.LEADTIME_DIAS},${body.COSTO_ESTIBA},${body.PEAJES},${body.COMBUSTIBLE_GLNS},${body.REDIMIENTO_KM_GLNS},'${ingresoOrigen}','${ingresoDestino}',${body.COMISION}`;
     // var params = `${body.ID_RUTA},'${body.DS_RUTA.toUpperCase()}',${body.ID_MONEDA},${body.TARIFA},${body.ID_ORIGEN},${body.ID_DESTINO},${body.ID_CLIENTE},${body.ID_TIPO_CARGA},${body.ID_PRODUCTO},'${body.OBSERVACION.toUpperCase()}',${body.ID_USUARIO}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_RUTA ${params}`;
     var request = new mssql.Request();
@@ -2052,6 +2052,60 @@ app.get('/conceptosGatosOp', mdAuthenticattion.verificarToken, (req, res, next )
     });  
 });
 // End Get conceptos gastos operativos
+
+// Get motivo descargo diferencia peso
+app.get('/motivosDescargo', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var lsql = `FE_SUPERVAN.DBO.SP_GET_MOTIVO_DESCARGO_DIF_PESO`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var motivos = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                motivos
+            });
+        }
+    });  
+});
+// End Get motivo descargo diferencia peso
+
+
+// Update motivo descargo guia
+app.put('/motivoDescargoGuia', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var body = req.body;
+    var params = `${body.idGuia},${body.idMotivo},${body.idUser}`; 
+    var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_MOTIVO_DESCARGO_GUIA ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var guiaUpdate = result.recordset[0];  
+            var idGuia =  guiaUpdate.ID_GUIA;
+            if (!idGuia) {
+                return res.status(400).send({
+                    ok: false,
+                    message: guiaUpdate.MESSAGE
+                });
+            }
+            return res.status(200).send({
+                ok: true,
+                guiaUpdate
+            });
+        }
+    });  
+});
+// End Update motivo descargo guia
 
 // REGISTER
 ////////////////////////////////////////////////////////////////////////////////

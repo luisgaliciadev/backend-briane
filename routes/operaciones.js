@@ -3819,14 +3819,14 @@ app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', (req, res, next ) =>
                                             var tarifa = 0;
                                             tarifa = viaje.TARIFA;
                                             viajesTotal = viajesTotal + viaje.VIAJES;
-                                            tarifaTotalTracto = tarifaTotalTracto + (viaje.VIAJES * tarifa * viaje.CANTIDAD);
-                                            totalTarifa = totalTarifa + (viaje.VIAJES * tarifa * viaje.CANTIDAD);
+                                            tarifaTotalTracto = tarifaTotalTracto + (tarifa * viaje.CANTIDAD);
+                                            totalTarifa = totalTarifa + (tarifa * viaje.CANTIDAD);
                                             totalViajesDia = totalViajesDia + viaje.VIAJES;
                                             arrayDetalle.push({
                                                 ruta: viaje.DS_ORI_DEST + ' - ' + viaje.DESTINO,
                                                 viajes: viaje.VIAJES,
                                                 comsion: viaje.TARIFA,
-                                                tarifaTotal: new Intl.NumberFormat().format(parseFloat(viaje.VIAJES * tarifa * viaje.CANTIDAD).toFixed(2)) 
+                                                tarifaTotal: new Intl.NumberFormat().format(parseFloat(tarifa * viaje.CANTIDAD).toFixed(2)) 
                                             });
                                             detalleArray = detalleArray +' ' + viaje.DS_ORI_DEST + '= ' + viaje.VIAJES        
                                         }
@@ -3905,7 +3905,6 @@ app.post('/motivoNoProductividadTracto', (req, res, next ) => {
     var body = req.body;
     var params = `${body.id},${body.idConductor},'${body.motivo.toUpperCase()}','${body.fecha}',${body.idUsuario}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_UPDATE_OP_NO_PRODUCTIVIDAD_TRACTO ${params}`;
-    console.log(lsql);
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
         if (err) { 
