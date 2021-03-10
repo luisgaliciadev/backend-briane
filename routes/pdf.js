@@ -859,9 +859,10 @@ app.get('/renewpdfviatico/:idViatico/:idConductor', mdAuthenticattion.verificarT
 // // Fin Generar nuevo pdf comprobante viaticos conductor
 
 // Generar nuevo pdf comprobante viaticos conductor manual
-app.get('/pdfviaticomanual/:nroSemana', (req, res, next ) => {
+app.get('/pdfviaticomanual/:nroSemana/:anio', (req, res, next ) => {
+  var anio = req.params.anio;
   var nroSemana = req.params.nroSemana;
-  var lsql = `select * from fe_supervan.dbo.viaticosManual where nroSemana = ${nroSemana}`;
+  var lsql = `select * from fe_supervan.dbo.viaticosManual where nroSemana = ${nroSemana} and anio = ${anio}`;
   var request = new mssql.Request();
   request.query(lsql, (err, result) => {
     if (err) { 
@@ -1209,7 +1210,7 @@ app.get('/pdfviaticomanual/:nroSemana', (req, res, next ) => {
 
           </body>
         </html>`;
-        var nombreDoc = viatico.dni + '-' + numeroRecibo + '.pdf';
+        var nombreDoc = viatico.dni + '-' + numeroRecibo;
         crearPdf(contenido,nombreDoc);
         // setTimeout(() => {  
         //   crearPdf(contenido,nombreDoc);

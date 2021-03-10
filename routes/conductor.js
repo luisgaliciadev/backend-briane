@@ -77,7 +77,7 @@ app.get('/viajeshorascomision/:desde/:hasta/:dni/:search/:zona', mdAuthenticatti
 // End Vijes-horas-comision conductores 
 
 // Get Vijes diferencia de peso por conductor
-app.get('/viajesDiferenciaPeso/:desde/:hasta/:dni/',  (req, res) => {
+app.get('/viajesDiferenciaPeso/:desde/:hasta/:dni/', mdAuthenticattion.verificarToken, (req, res) => {
     var desde = req.params.desde;
     var hasta = req.params.hasta;
     var dni = req.params.dni;  
@@ -123,7 +123,7 @@ app.get('/viajesDiferenciaPeso/:desde/:hasta/:dni/',  (req, res) => {
 // End Get Vijes diferencia de peso
 
 // Get Vijes diferencia 
-app.get('/viajesDiferenciaPesoTotal/:search/:desde/:hasta',  (req, res) => {
+app.get('/viajesDiferenciaPesoTotal/:search/:desde/:hasta', mdAuthenticattion.verificarToken, (req, res) => {
     var search = req.params.search;
     var desde = req.params.desde;
     var hasta = req.params.hasta;
@@ -150,7 +150,7 @@ app.get('/viajesDiferenciaPesoTotal/:search/:desde/:hasta',  (req, res) => {
 // End Get Vijes diferencia
 
 // Get Vijes conductores 
-app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', (req, res) => {
+app.get('/viajeshoras/:desde/:hasta/:dni/:search/:zona', mdAuthenticattion.verificarToken, (req, res) => {
     var desde = req.params.desde;
     var hasta = req.params.hasta;
     var dni = req.params.dni;  
@@ -2531,7 +2531,7 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                     });
                 }
             });
-            var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA FROM FE_SUPERVAN.DBO.DIAS WHERE FECHA >= '${desde}' AND FECHA <= '${hasta}'`;
+            var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA,NOMBRE_DIA FROM FE_SUPERVAN.DBO.VIEW_DIAS WHERE FECHA >= '${desde}' AND FECHA <= '${hasta}'`;
             var request = new mssql.Request();
             request.query(lsql, (err, result) => {
                 if (err) { 
@@ -2580,7 +2580,7 @@ app.get('/productividadComision/:desde/:hasta/:idZona', (req, res, next ) => {
                                             totalComision = totalComision + (viaje.VIAJES * comision);
                                             totalViajesDia = totalViajesDia + viaje.VIAJES;
                                             arrayDetalle.push({
-                                                ruta: viaje.DS_ORI_DEST + ' - ' + viaje.DESTINO,
+                                                ruta: viaje.DS_ORI_DEST + ' / ' + viaje.DESTINO,
                                                 viajes: viaje.VIAJES,
                                                 comsion: viaje.COMISION,
                                                 comisionTotal: viaje.VIAJES * comision

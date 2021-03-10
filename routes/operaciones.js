@@ -3778,7 +3778,7 @@ app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', (req, res, next ) =>
                 }
             });
 
-            var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA FROM FE_SUPERVAN.DBO.DIAS WHERE FECHA >= '${desde}' AND FECHA <= '${hasta}'`;
+            var lsql = `SELECT '_' + REPLACE(DIA, '/', '_') AS DIA,DIA AS FECHA,NOMBRE_DIA FROM FE_SUPERVAN.DBO.VIEW_DIAS WHERE FECHA >= '${desde}' AND FECHA <= '${hasta}'`;
             var request = new mssql.Request();
             request.query(lsql, (err, result) => {
                 if (err) { 
@@ -3823,7 +3823,7 @@ app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', (req, res, next ) =>
                                             totalTarifa = totalTarifa + (tarifa * viaje.CANTIDAD);
                                             totalViajesDia = totalViajesDia + viaje.VIAJES;
                                             arrayDetalle.push({
-                                                ruta: viaje.DS_ORI_DEST + ' - ' + viaje.DESTINO,
+                                                ruta: viaje.DS_ORI_DEST + ' / ' + viaje.DESTINO,
                                                 viajes: viaje.VIAJES,
                                                 comsion: viaje.TARIFA,
                                                 tarifaTotal: new Intl.NumberFormat().format(parseFloat(tarifa * viaje.CANTIDAD).toFixed(2)) 
