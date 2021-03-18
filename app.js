@@ -62,10 +62,10 @@ var config = {
         "encrypt": false,
         // "instanceName": "192.168.3.3:1433"
     },
-    connectionTimeout: 900000,
-    requestTimeout: 900000,
+    connectionTimeout: 300000,
+    requestTimeout: 300000,
     pool: {
-        idleTimeoutMillis: 900000,
+        idleTimeoutMillis: 300000,
         max: 100
     }
 };

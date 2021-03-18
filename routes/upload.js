@@ -77,11 +77,11 @@ app.put('/:tipo/:id/:id_user', (req, res, next ) => {
             var fileName = `${id}-${new Date().getMilliseconds()}.${extFile}`;
 
             if (tipo === 'documentos-conductor') {
-                var fileName = `${id_user}-${id}-${nombreArchivo}.${extFile}`;
+                var fileName = `${id_user}-${id}-${nombreArchivo}-${new Date().getMilliseconds()}.${extFile}`;
             }
 
             if (tipo === 'documentos-unidad') {
-                var fileName = `${id_user}-${id}-${nombreArchivo}.${extFile}`;
+                var fileName = `${id_user}-${id}-${nombreArchivo}-${new Date().getMilliseconds()}.${extFile}`;
             }
 
             if (tipo === 'facturas-peaje') {
@@ -315,11 +315,11 @@ function uploadFile(tipo, id, fileName, res, id_user){
                 } else {                                       
                     var oldPath = './uploads/documentos-conductor/' + relacionDocConductor[0].NB_ARCHIVO;
                     // elimina archivo anterior
-                    if (fs.existsSync(oldPath)) {
-                        // if (company[0].IMAGE.length > 0) {
-                            fs.unlinkSync(oldPath);
-                        // }
-                    }
+                    // if (fs.existsSync(oldPath)) {
+                    //     // if (company[0].IMAGE.length > 0) {
+                    //         fs.unlinkSync(oldPath);
+                    //     // }
+                    // }
                     var params = `${id}, '${fileName}', '${id_user}'`;
                     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_ARCHIVO_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
                     var request = new mssql.Request();
@@ -338,10 +338,30 @@ function uploadFile(tipo, id, fileName, res, id_user){
                                     message: 'No existe el registro.'
                                 });
                             } else {
-                                return res.status(200).send({
-                                    ok: true,
-                                    // message: denunciaUpdated[0].MESSAGE,                             
-                                    relacionDocConductor
+                                var params = `${id}, '${fileName}'`;
+                                var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_OP_DETA_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
+                                var request = new mssql.Request();
+                                request.query(lsql, (err, result) => {
+                                    if (err) { 
+                                        return res.status(500).send({
+                                            ok: false,
+                                            message: 'Error en la petición.',
+                                            error: err
+                                        });
+                                    } else {
+                                        var detaRelacionDocConductor = result.recordset;
+                                        if (detaRelacionDocConductor.length === 0) {
+                                            return res.status(400).send({
+                                                ok: true,
+                                                message: 'No actualizo el registro documento.'
+                                            });
+                                        }
+                                        return res.status(200).send({
+                                            ok: true,                  
+                                            relacionDocConductor,
+                                            detaRelacionDocConductor
+                                        });
+                                    }
                                 });
                             }
                         }
@@ -354,7 +374,7 @@ function uploadFile(tipo, id, fileName, res, id_user){
     if (tipo === 'documentos-unidad'){    
         var params = `${id}`;
         var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_RELACION_DOCUMENTOS_UNIDAD ${params}`;
-        var request = new mssql.Request();
+        var request = new mssql.Request();        
         request.query(lsql, (err, result) => {
             if (err) { 
                 return res.status(500).send({
@@ -373,11 +393,11 @@ function uploadFile(tipo, id, fileName, res, id_user){
                 } else {                                       
                     var oldPath = './uploads/documentos-unidad/' + relacionDocUnidad[0].NB_ARCHIVO;
                     // elimina archivo anterior
-                    if (fs.existsSync(oldPath)) {
-                        // if (company[0].IMAGE.length > 0) {
-                            fs.unlinkSync(oldPath);
-                        // }
-                    }
+                    // if (fs.existsSync(oldPath)) {
+                    //     // if (company[0].IMAGE.length > 0) {
+                    //         fs.unlinkSync(oldPath);
+                    //     // }
+                    // }
                     var params = `${id}, '${fileName}', '${id_user}'`;
                     var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_ARCHIVO_RELACION_DOCUMENTOS_UNIDAD ${params}`;
                     var request = new mssql.Request();
@@ -396,11 +416,31 @@ function uploadFile(tipo, id, fileName, res, id_user){
                                     message: 'No existe el registro.'
                                 });
                             } else {
-                                return res.status(200).send({
-                                    ok: true,
-                                    // message: denunciaUpdated[0].MESSAGE,                             
-                                    relacionDocUnidad
-                                });
+                                var params = `${id}, '${fileName}'`;
+                                var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_OP_DETA_RELACION_DOCUMENTOS_UNIDAD ${params}`;
+                                var request = new mssql.Request();
+                                request.query(lsql, (err, result) => {
+                                    if (err) { 
+                                        return res.status(500).send({
+                                            ok: false,
+                                            message: 'Error en la petición.',
+                                            error: err
+                                        });
+                                    } else {
+                                        var detaRelacionDocUnidad = result.recordset;
+                                        if (detaRelacionDocUnidad.length === 0) {
+                                            return res.status(400).send({
+                                                ok: true,
+                                                message: 'No actualizo el registro documento.'
+                                            });
+                                        }
+                                        return res.status(200).send({
+                                            ok: true,                                                                     
+                                            relacionDocUnidad,
+                                            detaRelacionDocUnidad
+                                        });
+                                    }
+                                });                         
                             }
                         }
                     });

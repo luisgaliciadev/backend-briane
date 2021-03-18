@@ -1582,7 +1582,7 @@ app.get('/documentosConductorTotal/:idCliente/:idConductor', mdAuthenticattion.v
 // Register relación documento conductor
 app.post('/documentoConductorRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
     var body = req.body;
-    var params = `${body.idConductor},${body.idDocumento},${body.idCliente},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.idTipo},${body.idUsuario}`; 
+    var params = `${body.idConductor},${body.idDocumento},${body.idCliente},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.idTipo},${body.idUsuario},'${body.observacion}'`; 
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -1613,7 +1613,7 @@ app.post('/documentoConductorRelacion', mdAuthenticattion.verificarToken, (req, 
 // Update relación documento conductor
 app.put('/documentoConductorRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
     var body = req.body;
-    var params = `${body.idRelacionDocConductor},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.fgActivo},${body.idTipo},${body.idUsuario}`; 
+    var params = `${body.idRelacionDocConductor},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.fgActivo},${body.idTipo},${body.idUsuario},'${body.observacion}'`; 
     var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_OP_RELACION_DOCUMENTOS_CONDUCTOR ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -1900,7 +1900,7 @@ app.get('/documentosUnidadTotal/:idCliente/:idUnidad', mdAuthenticattion.verific
 // Register relación documento unidad
 app.post('/documentoUnidadRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
     var body = req.body;
-    var params = `${body.idUnidad},${body.idDocumento},${body.idCliente},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.idTipo},${body.idUsuario}`; 
+    var params = `${body.idUnidad},${body.idDocumento},${body.idCliente},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.idTipo},${body.idUsuario},'${body.observacion}'`; 
     var lsql = `FE_SUPERVAN.DBO.SP_REGISTER_OP_RELACION_DOCUMENTOS_UNIDAD ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -1931,7 +1931,7 @@ app.post('/documentoUnidadRelacion', mdAuthenticattion.verificarToken, (req, res
 // Update relación documento unidad
 app.put('/documentoUnidadRelacion', mdAuthenticattion.verificarToken, (req, res, next ) => {     
     var body = req.body;
-    var params = `${body.idRelacionDocUnidad},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.fgActivo},${body.idTipo},${body.idUsuario}`; 
+    var params = `${body.idRelacionDocUnidad},'${body.nroDocumento}','${body.fhEmision}','${body.fhVencimiento}',${body.fgActivo},${body.idTipo},${body.idUsuario},'${body.observacion}'`; 
     var lsql = `FE_SUPERVAN.DBO.SP_UPDATE_OP_RELACION_DOCUMENTOS_UNIDAD ${params}`;
     var request = new mssql.Request();
     request.query(lsql, (err, result) => {
@@ -2106,6 +2106,29 @@ app.put('/motivoDescargoGuia', mdAuthenticattion.verificarToken, (req, res, next
     });  
 });
 // End Update motivo descargo guia
+
+
+// Get MESES
+app.get('/meses', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var lsql = `SELECT * FROM FE_SUPERVAN.DBO.MESES`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var meses = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                meses
+            });
+        }
+    });  
+});
+// End Get MESES
 
 // REGISTER
 ////////////////////////////////////////////////////////////////////////////////

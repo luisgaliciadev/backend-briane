@@ -3751,7 +3751,7 @@ app.put('/planificacionOpGuia', mdAuthenticattion.verificarToken, (req, res, nex
 // End Update fechas planificacion guia
 
 // Get productividad tracto tarifa
-app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', (req, res, next ) => {        
+app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', mdAuthenticattion.verificarToken, (req, res, next ) => {        
     var desde = req.params.desde;
     var hasta = req.params.hasta;
     var idZona = req.params.idZona;
@@ -3881,7 +3881,6 @@ app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', (req, res, next ) =>
                                 totalTarifa = 0;
                                 viajesTotal = 0;
                                 tarifaTotalTracto = 0;
-                                detalle = detalle.substring(1);
                             });
                             productividad = productividad.substring(1);
                             var productividaTracto =  JSON.parse('[' + productividad + ']');
@@ -3901,7 +3900,7 @@ app.get('/productividadTractoTarifa/:desde/:hasta/:idZona', (req, res, next ) =>
 // End Get productividad tracto tarifa
 
 // Register-Update motivo no productividad tracto
-app.post('/motivoNoProductividadTracto', (req, res, next ) => {
+app.post('/motivoNoProductividadTracto', mdAuthenticattion.verificarToken, (req, res, next ) => {
     var body = req.body;
     var params = `${body.id},${body.idConductor},'${body.motivo.toUpperCase()}','${body.fecha}',${body.idUsuario}`;
     var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_UPDATE_OP_NO_PRODUCTIVIDAD_TRACTO ${params}`;
@@ -3931,6 +3930,341 @@ app.post('/motivoNoProductividadTracto', (req, res, next ) => {
     });
 });
 // End Register-Update motivo no productividad tracto
+
+// Register tareo operaciones
+app.post('/tareoOperaciones', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var body = req.body;
+    var params = `${body.anio},${body.mes},'${body.idZona}',${body.idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_TAREO_OPERACIONES ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var tareoOperaciones = result.recordset[0];   
+            console.log(tareoOperaciones);
+            var idTareo = tareoOperaciones.ID_TAREO_OP;    
+            if (!idTareo) {
+                return res.status(400).send({
+                    ok: false,
+                    message: tareoOperaciones.MESSAGE
+                });  
+            }
+
+            return res.status(200).send({
+                ok: true,
+                tareoOperaciones
+            });   
+        }
+    });
+});
+// End Register tareo operaciones
+
+// Get tareo operaciones
+app.get('/tareoOperaciones/:id', (req, res, next ) => {
+    var idTareo = req.params.id;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_TAREO_OPERACIONES ${idTareo}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var tareoOperaciones = result.recordset[0];
+            if (!tareoOperaciones) {
+                return res.status(400).send({
+                    ok: false,
+                    message: 'No existe el registro.'
+                });  
+            }
+            var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_RESUMEN_OP_TAREO_OPERACIONES ${idTareo}`;
+            var request = new mssql.Request();
+            request.query(lsql, (err, result) => {
+                if (err) { 
+                    return res.status(500).send({
+                        ok: false,
+                        message: 'Error en la petición.',
+                        error: err
+                    });
+                } else {
+                    var resumenTareo = result.recordset;   
+                    var year = tareoOperaciones.ANIO;
+                    var mes = tareoOperaciones.MES;
+                    var inicioMes = `${year}-${mes}-1`;
+                    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_DIAS_MES '${inicioMes}'`;
+                    var request = new mssql.Request();
+                    request.query(lsql, (err, result) => {
+                        if (err) { 
+                            return res.status(500).send({
+                                ok: false,
+                                message: 'Error en la petición.',
+                                error: err
+                            });
+                        } else {
+                            var diasMes = result.recordset;
+                            if (diasMes.length === 0) {
+                                return res.status(400).send({
+                                    ok: false,
+                                    message: 'No existe el registro.'
+                                });  
+                            }
+                            var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_DETA_OP_TAREO_OPERACIONES '${idTareo}'`;
+                            var request = new mssql.Request();
+                            request.query(lsql, (err, result) => {
+                                if (err) { 
+                                    return res.status(500).send({
+                                        ok: false,
+                                        message: 'Error en la petición.',
+                                        error: err
+                                    });
+                                } else {
+                                    var detaTareoOperaciones = result.recordset;
+                                    var arrayDetalle = '';
+                                    var detalleTereos = '';
+                                    var detalle = ''
+                                    var tareoFinal = '';
+                                    resumenTareo.forEach(tareo => {
+                                        diasMes.forEach(dia => {
+                                            let arraryFecha = dia.DIA.split('/');
+                                            detaTareoOperaciones.forEach(detaTareo => {
+                                                if (dia.DIA === detaTareo.DIA && detaTareo.ID_CONDUCTOR === tareo.ID_CONDUCTOR) {                                            
+                                                    arrayDetalle = {
+                                                        dia: dia.NOMBRE_DIA + '|' + dia.DIA,
+                                                        fecha: `${arraryFecha[2]}-${arraryFecha[1]}-${arraryFecha[0]}`,
+                                                        idDetatareo: detaTareo.ID_DETA_TAREO_OP,
+                                                        turno1: detaTareo.TURNO1,
+                                                        turno2: detaTareo.TURNO2,
+                                                        turno3: detaTareo.TURNO3
+                                                    };
+                                                } 
+                                            });
+                                            if (arrayDetalle.length === 0) {
+                                                arrayDetalle = {
+                                                    dia: dia.NOMBRE_DIA + ' ' + dia.DIA,
+                                                    fecha: `${arraryFecha[2]}-${arraryFecha[1]}-${arraryFecha[0]}`,
+                                                    idDetatareo: 0,
+                                                    turno1: 0,
+                                                    turno2: 0,
+                                                    turno3: 0
+                                                };
+                                            }
+                                            detalleTereos = JSON.stringify(arrayDetalle);
+                                            detalle = detalle + `,
+                                                "${dia.DIA}": ${detalleTereos}
+                                            `; 
+                                            arrayDetalle = '';   
+                                        });
+                                        detalle = detalle.substring(1);
+                                        tareoFinal = tareoFinal + `,{
+                                            "idConductor": ${tareo.ID_CONDUCTOR},
+                                            "dni": "${tareo.IDENTIFICACION}",
+                                            "nombre": "${tareo.NOMBRE_APELLIDO}",
+                                            ${detalle}
+                                        }`;
+                                        detalle = '';
+                                    });
+                                    tareoFinal = tareoFinal.substring(1);
+                                    var tareoOperacionesTotal =  JSON.parse('[' + tareoFinal + ']');
+                                    return res.status(200).send({
+                                        ok: true,
+                                        tareoOperaciones,
+                                        tareoOperacionesTotal,
+                                        diasMes
+                                    });   
+                                }
+                            });
+                        }
+                    });  
+                }
+            });
+        }
+    });
+});
+// End Get tareo operaciones
+
+
+// Get Motivos tareo operaciones
+app.get('/motivosTareoOperaciones', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var lsql = `EXEC FE_SUPERVAN.DBO.GET_OP_MOTIVOS_TAREO_OPERACIONES`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var motivos = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                motivos
+            });
+        }
+    });  
+});
+// End Get Motivos tareo operaciones
+
+// Register deta tareo operaciones
+app.post('/detaTareoOperaciones', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var body = req.body;
+    var params = `${body.idTareo},${body.idConductor},'${body.fecha}',${body.turno1},${body.turno2},${body.turno3},${body.idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_REGISTER_DETA_TAREO_OPERACIONES ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaTareoOperaciones = result.recordset[0];   
+            var idDetaTareo = detaTareoOperaciones.ID_DETA_TAREO_OP;    
+            if (!idDetaTareo) {
+                return res.status(400).send({
+                    ok: false,
+                    message: detaTareoOperaciones.MESSAGE
+                });  
+            }
+            return res.status(200).send({
+                ok: true,
+                detaTareoOperaciones
+            });   
+        }
+    });
+});
+// End Register deta tareo operaciones
+
+// Update deta tareo operaciones
+app.put('/detaTareoOperaciones', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var body = req.body;
+    var params = `${body.idDetaTareo},${body.turno1},${body.turno2},${body.turno3},${body.idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_UPDATE_DETA_TAREO_OPERACIONES ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaTareoOperaciones = result.recordset[0];   
+            var idDetaTareo = detaTareoOperaciones.ID_DETA_TAREO_OP;    
+            if (!idDetaTareo) {
+                return res.status(400).send({
+                    ok: false,
+                    message: detaTareoOperaciones.MESSAGE
+                });  
+            }
+            return res.status(200).send({
+                ok: true,
+                detaTareoOperaciones
+            });   
+        }
+    });
+});
+// End Update deta tareo operaciones
+
+// Delete deta tareo operaciones
+app.delete('/detaTareoOperaciones/:idTareo/:idConductor/:idUsuario', mdAuthenticattion.verificarToken, (req, res, next ) => {
+    var idTareo = req.params.idTareo;
+    var idConductor = req.params.idConductor;
+    var idUsuario = req.params.idUsuario;
+    var params = `${idTareo},${idConductor},${idUsuario}`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_DELETE_DETA_TAREO_OPERACIONES ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaTareoOperaciones = result.recordset[0];   
+            // var idDetaTareo = detaTareoOperaciones.ID_DETA_TAREO_OP;    
+            // if (!idDetaTareo) {
+            //     return res.status(400).send({
+            //         ok: false,
+            //         message: detaTareoOperaciones.MESSAGE
+            //     });  
+            // }
+            return res.status(200).send({
+                ok: true,
+                detaTareoOperaciones
+            });   
+        }
+    });
+});
+// End Update deta tareo operaciones
+
+// Get tareos operaciones
+app.get('/tareosOperaciones/:search/:desde/:hasta', mdAuthenticattion.verificarToken, (req, res, next ) => {     
+    var search = req.params.search;
+    var desde = req.params.desde;
+    var hasta = req.params.hasta;
+    var params = `'${search}','${desde}', '${hasta}'`;
+    var lsql = `EXEC FE_SUPERVAN.DBO.SP_GET_OP_TAREOS_OPERACIONES ${params}`;
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) { 
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var tareosOperaciones = result.recordset;   
+            return res.status(200).send({
+                ok: true,
+                tareosOperaciones
+            });
+        }
+    });  
+});
+// End Get tareos operaciones
+
+// Register deta tareo operaciones multiple
+app.post('/detaTareosOperaciones', (req, res, next ) => {
+    var body = req.body;
+    var params = '';
+    body.forEach(tareo =>{
+        params = params + ',' + '\n' + `(${tareo.idTareo}, ${tareo.idConductor} , '${tareo.fecha}', ${tareo.turno1}, '${tareo.turno2}', ${tareo.turno3}, ${tareo.idUsuario})`;
+    });
+    params = params.substring(1);
+    var lsql = `INSERT INTO FE_SUPERVAN.DBO.OP_DETA_TAREO_OPERACIONES (ID_TAREO_OP,ID_CONDUCTOR,DIA,TURNO1,TURNO2,TURNO3,ID_USUARIO_BS) 
+            VALUES ${params}`;
+    console.log(lsql);
+    var request = new mssql.Request();
+    request.query(lsql, (err, result) => {
+        if (err) {                       
+            return res.status(500).send({
+                ok: false,
+                message: 'Error en la petición.',
+                error: err
+            });
+        } else {
+            var detaTereosOp = result.rowsAffected[0];
+            return res.status(200).send({
+                ok: true,                             
+                detaTereosOp
+            });
+        }
+    });
+});
+// End Register deta tareo operaciones
   
 
 module.exports = app;
