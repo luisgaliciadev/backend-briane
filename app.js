@@ -49,13 +49,12 @@ app.set('view engine', 'ejs');
 
 // Config BD
 var config = {
-    user: 'sa',
+    user: '',
     // driver='tedious',
-    password: 'Cybersac1',
-    // server: '190.117.103.41',
-    server: '66.23.235.30',
+    password: '',
+    server: '',
     port: 10000,
-    database: 'BRIANE_APP',
+    database: '',
     options: {
         "abortTransactionOnError": true,
         "enableArithAbort": true,
@@ -73,11 +72,10 @@ var config = {
 var configServal = {
     user: 'sa',
     // driver='tedious',
-    password: 'Cybersac1',
-    // server: '190.117.103.41',
-    server: '66.23.235.30',
+    password: '',
+    server: '',
     port: 10000,
-    database: 'FE_SUPERVAN',
+    database: '',
     options: {
         "abortTransactionOnError": true,
         "enableArithAbort": true,
